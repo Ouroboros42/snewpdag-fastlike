@@ -12,6 +12,7 @@ import numbers
 from astropy.time import Time
 from snewpdag.dag import Node
 from snewpdag.values import TimeSeries
+from snewpdag.dag.lib import store_field
 
 class NewTimeSeries(Node):
   def __init__(self, out_field, **kwargs):
@@ -25,6 +26,6 @@ class NewTimeSeries(Node):
     super().__init__(**kwargs)
 
   def alert(self, data):
-    data[self.out_field] = TimeSeries(self.start, self.stop)
+    store_field(data, self.out_field, TimeSeries(self.start, self.stop))
     return data
 

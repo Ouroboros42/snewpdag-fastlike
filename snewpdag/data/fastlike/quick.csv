@@ -1,0 +1,26 @@
+"Control","Pass",,"'line':1"
+,,,,,
+,,,,,"Accelerated Likelihood Calculation with background"
+,,,,,
+"SN-times","gen.TrueTimes","Control","'detector_location':'/home/jesu4059/snewpdag-fastlike/snewpdag/data/detector_location.csv','detectors':['LVD', 'SNOP'],'ra':$SN_RA,'dec':$SN_DEC,'time':$SN_TIME"
+"SN","Write","SN-times","'on':['alert', 'report'],'write':(('estimator/event_hist/nbins',$NBINS),('estimator/event_hist/twindow',$WINDOW),('estimator/likelihood_mesh/npoints',$NLAGMESH),('truth/model','$MODEL'),('truth/species','$SPECIES'),('truth/dets/LVD/yield',$YIELD_LVD),('truth/dets/SNOP/yield',$YIELD_SNOP),('truth/dets/LVD/background',$BG_LVD),('truth/dets/SNOP/background',$BG_SNOP),('png_pattern','/data/snoplus/lucas/snout/fastlike/LVD-SNOP@$NOW/imgs/{}-{}-{}.png'),('pickle_pattern','/data/snoplus/lucas/snout/fastlike/LVD-SNOP@$NOW/jar/{}-{}-{}.pickle'),('json_pattern','/data/snoplus/lucas/snout/fastlike/LVD-SNOP@$NOW/jsons/{}-{}-{}.json'),('coincident_detectors',['LVD', 'SNOP']))"
+,,,,,
+"LVD-new","ops.NewTimeSeries","SN","'out_field':('timeseries', 'LVD'),'start':$SN_SAMPLE_START,'stop':$SN_SAMPLE_STOP"
+"LVD-signal","gen.GenTimeDist","LVD-new","'field':('timeseries', 'LVD'),'sig_mean':$YIELD_LVD,'sig_t0':('truth', 'dets', 'LVD', 'true_t'),'sig_filetype':'tng','sig_filename':'/home/tseng/dev/snews/numodels/ls220-$MODEL/neutrino_signal_$SPECIES-LS220-$MODEL.data'"
+"LVD-bg","gen.Uniform","LVD-signal","'field':('timeseries', 'LVD'),'rate':$BG_LVD,'tmin':$SN_SAMPLE_START,'tmax':$SN_SAMPLE_STOP"
+,,,,,
+"SNOP-new","ops.NewTimeSeries","LVD-bg","'out_field':('timeseries', 'SNOP'),'start':$SN_SAMPLE_START,'stop':$SN_SAMPLE_STOP"
+"SNOP-signal","gen.GenTimeDist","SNOP-new","'field':('timeseries', 'SNOP'),'sig_mean':$YIELD_SNOP,'sig_t0':('truth', 'dets', 'SNOP', 'true_t'),'sig_filetype':'tng','sig_filename':'/home/tseng/dev/snews/numodels/ls220-$MODEL/neutrino_signal_$SPECIES-LS220-$MODEL.data'"
+"SNOP-bg","gen.Uniform","SNOP-signal","'field':('timeseries', 'SNOP'),'rate':$BG_SNOP,'tmin':$SN_SAMPLE_START,'tmax':$SN_SAMPLE_STOP"
+,,,,,
+"diff-LVD-SNOP","LikeLag","SNOP-bg","'in_series1_field':('timeseries', 'LVD'),'in_series2_field':('timeseries', 'SNOP'),'out_field':'dts','out_key':'LVD-SNOP','det1_bg':$BG_LVD,'det2_bg':$BG_SNOP,'tnbins':$NBINS,'twidth':$WINDOW,'nlags':$NLAGMESH"
+"pull-score-LVD-SNOP","LagPull","diff-LVD-SNOP","'out_field':('dts', 'LVD-SNOP', 'pull_score'),'in_obs_field':('dts', 'LVD-SNOP', 'dt'),'in_err_field':('dts', 'LVD-SNOP', 'dt_err'),'in_true_field':('truth', 'dets', 'LVD', 'true_t'),'in_base_field':('truth', 'dets', 'SNOP', 'true_t')"
+"pull-acc-LVD-SNOP","Accumulator","pull-score-LVD-SNOP","'title':'pull_scores_LVD_SNOP','in_field':('dts', 'LVD-SNOP', 'pull_score'),'out_field':('analysis', 'pulls', 'LVD-SNOP'),'alert_pass':True,'clear_on':[]"
+"opt-pull-score-LVD-SNOP","LagPull","pull-acc-LVD-SNOP","'out_field':('dts', 'LVD-SNOP', 'opt_pull_score'),'in_obs_field':('dts', 'LVD-SNOP', 'opt_dt'),'in_err_field':('dts', 'LVD-SNOP', 'dt_err'),'in_true_field':('truth', 'dets', 'LVD', 'true_t'),'in_base_field':('truth', 'dets', 'SNOP', 'true_t')"
+"opt-pull-acc-LVD-SNOP","Accumulator","opt-pull-score-LVD-SNOP","'title':'opt_pull_scores_LVD-SNOP','in_field':('dts', 'LVD-SNOP', 'opt_pull_score'),'out_field':('analysis', 'opt_pulls', 'LVD-SNOP'),'alert_pass':True,'clear_on':[]"
+"plot-diff-LVD-SNOP","renderers.fastlike.PairTrialPlot","opt-pull-acc-LVD-SNOP","'in_dt_field':('dts', 'LVD-SNOP'),'in_true_t1_field':('truth', 'dets', 'LVD', 'true_t'),'in_true_t2_field':('truth', 'dets', 'SNOP', 'true_t'),'filename':'[png_pattern]'"
+"fit-pull-plot-LVD-SNOP","renderers.fastlike.PairPullPlot","plot-diff-LVD-SNOP","'in_pull_field':('analysis', 'pulls', 'LVD-SNOP'),'filename':'[png_pattern]'"
+"opt-pull-plot-LVD-SNOP","renderers.fastlike.PairPullPlot","fit-pull-plot-LVD-SNOP","'in_pull_field':('analysis', 'opt_pulls', 'LVD-SNOP'),'filename':'[png_pattern]'"
+,,,,,
+"TrialInfo","renderers.JsonOutput","opt-pull-plot-LVD-SNOP","'filename':'[json_pattern]','on':['alert'],'fields':['coincident_detectors', 'estimator', 'truth', 'dts']"
+"PullInfo","renderers.JsonOutput","TrialInfo","'filename':'[json_pattern]','on':['report'],'fields':['coincident_detectors', 'estimator', 'truth', 'analysis']"

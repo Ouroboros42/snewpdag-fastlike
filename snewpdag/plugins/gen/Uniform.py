@@ -31,7 +31,6 @@ class Uniform (Node):
   def alert(self, data):
     v, flag = fetch_field(data, self.field)
     if flag:
-      v = data[self.field]
       if not isinstance(v, TimeSeries) and not isinstance(v, Hist1D):
         logging.error('Uniform.alert: field is neither TimeSeries nor Hist1D')
         return False

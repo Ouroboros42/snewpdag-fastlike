@@ -4,6 +4,7 @@ DAG library routines
 import logging
 import numbers
 import numpy as np
+import os
 
 # deprecated: ns_per_second
 # deprecated: time_tuple_from_float(x)
@@ -56,7 +57,7 @@ def store_field(data, field, value):
     data[fs] = value
   return True
 
-def fill_filename(pattern, module_name, count, data):
+def fill_filename(pattern, module_name, count, data, create_dir=True):
   """
   Get filename, and fill out the details.
   pattern = '[field specifier]' - fetch pattern from payload using fetch_field.
@@ -73,5 +74,8 @@ def fill_filename(pattern, module_name, count, data):
       return None
     ps = s.strip()
   fn = ps.format(module_name, count, data.get('burst_id', 0))
+  
+  if create_dir:
+    os.makedirs(os.path.dirname(fn), exist_ok=True)
   return fn
 

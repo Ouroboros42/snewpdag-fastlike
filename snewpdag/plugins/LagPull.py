@@ -11,7 +11,7 @@ Arguments:
 """
 import logging
 from snewpdag.dag import Node
-from snewpdag.dag.lib import fetch_field
+from snewpdag.dag.lib import fetch_field, store_field
 
 class LagPull(Node):
   def __init__(self, out_field, in_obs_field, in_err_field, in_true_field,
@@ -46,9 +46,10 @@ class LagPull(Node):
       dx = obs - (truth - base)
       sigm = abs(err[0])
       sigp = abs(err[1])
-      data[self.out_field] = dx / (sigm if dx < 0 else sigp)
+      
+      store_field(data, self.out_field, dx / (sigm if dx < 0 else sigp))
     else:
-      data[self.out_field] = (obs - (truth - base)) / err
+      store_field(data, self.out_field, (obs - (truth - base)) / err)
     return data
 
   def alert(self, data):
