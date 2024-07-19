@@ -1,3 +1,6 @@
 [submodule "externals/lightcurve_match"]
 	path = externals/lightcurve_match
 	url = git@github.com:SNEWS2/lightcurve_match
+[submodule "externals/burstlag"]
+	path = externals/burstlag
+	url = git@github.com:Ouroboros42/burstlag.git
