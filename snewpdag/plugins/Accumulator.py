@@ -9,7 +9,7 @@ import logging
 import numpy as np
 
 from snewpdag.dag import Node
-from snewpdag.dag.lib import fetch_field
+from snewpdag.dag.lib import fetch_field, store_field
 
 class Accumulator(Node):
   def __init__(self, title, in_field, **kwargs):
@@ -23,13 +23,12 @@ class Accumulator(Node):
     self.series = []
 
   def alert(self, data):
+    x, exists = fetch_field(data, self.in_field)
+    if not exists:
+      return False
     if self.index:
-      x = data[self.in_field][self.index]
-    else:
-      x, exists = fetch_field(data, self.in_field)
-      if not exists:
-        return False
-    # append
+      x = x[self.index]
+      
     self.series.append(x)
     return self.alert_pass != False
 
@@ -46,7 +45,7 @@ class Accumulator(Node):
     if self.out_field == None:
       data.update(d)
     else:
-      data[self.out_field] = d
+      store_field(data, self.out_field, d)
     return True
 
   def revoke(self, data):
