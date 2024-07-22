@@ -22,9 +22,6 @@ export WINDOW=15
 
 export NLAGMESH=100
 
-export SN_RA=-60.0
-export SN_DEC=-30.0
-
 TIME_ROOT="2021-11-01 05:22"
 export SN_TIME="'$TIME_ROOT:01'"
 export SN_SAMPLE_START="'$TIME_ROOT:00'"

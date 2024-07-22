@@ -57,6 +57,14 @@ def store_field(data, field, value):
     data[fs] = value
   return True
 
+def fetch_dict_copy(data, fields):
+  maybe_dict, is_valid = fetch_field(data, fields)
+
+  if is_valid:
+    return maybe_dict.copy()
+  else:
+    return {}
+
 def fill_filename(pattern, module_name, count, data, create_dir=True):
   """
   Get filename, and fill out the details.

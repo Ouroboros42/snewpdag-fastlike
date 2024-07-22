@@ -20,8 +20,11 @@ class LineWriter:
         self.file.write(f'"{name}","{cls}",{source_nodes},"{self.flat_dict(params)}"\n')
         self.prev = name
     
-    def comment(self, comment: str):
-        self.file.write(f',,,,,"{comment}"\n')
+    def comment(self, comment: str, use_hash: bool = False):
+        if use_hash:
+            self.file.write(f'#{comment}\n')
+        else:
+            self.file.write(f',,,,,"{comment}"\n')
 
     def newline(self, n=1):
         for i in range(n):

@@ -27,13 +27,11 @@ with args.outfile as outfile:
     w.newline()
     w.comment("Accelerated Likelihood Calculation with background")
     w.newline()
-    w.module("SN-times", "gen.TrueTimes",
-        detector_location=f"'{root}snewpdag/data/detector_location.csv'",
-        detectors=dets, ra="$SN_RA", dec="$SN_DEC", time="$SN_TIME"
-    )
+    
     w.module("SN","Write",
         on=['alert','report'],
         write= tuple_pairs(
+            { "truth/sn_spec/time": "$SN_TIME" },
             { "estimator/event_hist/nbins": "$NBINS", "estimator/event_hist/twindow": "$WINDOW" },
             { "estimator/likelihood_mesh/npoints": "$NLAGMESH" },
             { "truth/model": "'$MODEL'", "truth/species": "'$SPECIES'" },
@@ -45,7 +43,20 @@ with args.outfile as outfile:
             coincident_detectors=dets,
         )
     )
-        
+
+    w.newline()
+    w.comment("This is the simplest way to randomly generate isotropic vectors. Magnitude is unimportant", True)
+    w.module("SN-Direction", "gen.RandomParameter",
+        out_field="'truth/sn_spec/direction_vec'",
+        dist_spec={ "type": "normal", "size": 3 }
+    )
+    
+    w.module("SN-times", "gen.DynamicTrueTimes",
+        detector_location=f"'{root}snewpdag/data/detector_location.csv'",
+        detectors=dets,
+        sn_spec_field="'truth/sn_spec'",
+    )
+
     for det in dets:
         w.newline()
         w.module(f"{det}-new","ops.NewTimeSeries",

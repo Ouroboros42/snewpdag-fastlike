@@ -2,10 +2,13 @@
 ,,,,,
 ,,,,,"Accelerated Likelihood Calculation with background"
 ,,,,,
-"SN-times","gen.TrueTimes","Control","'detector_location':'/home/jesu4059/snewpdag-fastlike/snewpdag/data/detector_location.csv','detectors':['IC', 'JUNO', 'SK', 'LVD', 'SNOP'],'ra':$SN_RA,'dec':$SN_DEC,'time':$SN_TIME"
-"SN","Write","SN-times","'on':['alert', 'report'],'write':(('estimator/event_hist/nbins',$NBINS),('estimator/event_hist/twindow',$WINDOW),('estimator/likelihood_mesh/npoints',$NLAGMESH),('truth/model','$MODEL'),('truth/species','$SPECIES'),('truth/dets/IC/yield',$YIELD_IC),('truth/dets/JUNO/yield',$YIELD_JUNO),('truth/dets/SK/yield',$YIELD_SK),('truth/dets/LVD/yield',$YIELD_LVD),('truth/dets/SNOP/yield',$YIELD_SNOP),('truth/dets/IC/background',$BG_IC),('truth/dets/JUNO/background',$BG_JUNO),('truth/dets/SK/background',$BG_SK),('truth/dets/LVD/background',$BG_LVD),('truth/dets/SNOP/background',$BG_SNOP),('png_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/imgs/{}-{}-{}.png'),('pickle_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/jar/{}-{}-{}.pickle'),('json_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/jsons/{}-{}-{}.json'),('coincident_detectors',['IC', 'JUNO', 'SK', 'LVD', 'SNOP']))"
+"SN","Write","Control","'on':['alert', 'report'],'write':(('truth/sn_spec/time',$SN_TIME),('estimator/event_hist/nbins',$NBINS),('estimator/event_hist/twindow',$WINDOW),('estimator/likelihood_mesh/npoints',$NLAGMESH),('truth/model','$MODEL'),('truth/species','$SPECIES'),('truth/dets/IC/yield',$YIELD_IC),('truth/dets/JUNO/yield',$YIELD_JUNO),('truth/dets/SK/yield',$YIELD_SK),('truth/dets/LVD/yield',$YIELD_LVD),('truth/dets/SNOP/yield',$YIELD_SNOP),('truth/dets/IC/background',$BG_IC),('truth/dets/JUNO/background',$BG_JUNO),('truth/dets/SK/background',$BG_SK),('truth/dets/LVD/background',$BG_LVD),('truth/dets/SNOP/background',$BG_SNOP),('png_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/imgs/{}-{}-{}.png'),('pickle_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/jar/{}-{}-{}.pickle'),('json_pattern','/data/snoplus/lucas/snout/fastlike/IC-JUNO-SK-LVD-SNOP/$NOW/jsons/{}-{}-{}.json'),('coincident_detectors',['IC', 'JUNO', 'SK', 'LVD', 'SNOP']))"
 ,,,,,
-"IC-new","ops.NewTimeSeries","SN","'out_field':('timeseries', 'IC'),'start':$SN_SAMPLE_START,'stop':$SN_SAMPLE_STOP"
+#This is the simplest way to randomly generate isotropic vectors. Magnitude is unimportant
+"SN-Direction","gen.RandomParameter","SN","'out_field':'truth/sn_spec/direction_vec','dist_spec':{'type': 'normal', 'size': 3}"
+"SN-times","gen.DynamicTrueTimes","SN-Direction","'detector_location':'/home/jesu4059/snewpdag-fastlike/snewpdag/data/detector_location.csv','detectors':['IC', 'JUNO', 'SK', 'LVD', 'SNOP'],'sn_spec_field':'truth/sn_spec'"
+,,,,,
+"IC-new","ops.NewTimeSeries","SN-times","'out_field':('timeseries', 'IC'),'start':$SN_SAMPLE_START,'stop':$SN_SAMPLE_STOP"
 "IC-signal","gen.GenTimeDist","IC-new","'field':('timeseries', 'IC'),'sig_mean':$YIELD_IC,'sig_t0':('truth', 'dets', 'IC', 'true_t'),'sig_filetype':'tng','sig_filename':'/home/tseng/dev/snews/numodels/ls220-$MODEL/neutrino_signal_$SPECIES-LS220-$MODEL.data'"
 "IC-bg","gen.Uniform","IC-signal","'field':('timeseries', 'IC'),'rate':$BG_IC,'tmin':$SN_SAMPLE_START,'tmax':$SN_SAMPLE_STOP"
 ,,,,,

@@ -24,7 +24,7 @@ import numpy as np
 import scipy.optimize as opt
 
 from snewpdag.dag import Node
-from snewpdag.dag.lib import fetch_field, store_field
+from snewpdag.dag.lib import fetch_field, store_field, fetch_dict_copy
 from snewpdag.values import TimeSeries
 
 from burstlag import DetectorRelation, FactorialCache, likelihood_mesh, find_peak, log_likelihood
@@ -135,7 +135,7 @@ class LikeLag(Node):
         )
         opt_peak = res.x.item()
 
-        out_dict = copy_dict_or_empty(fetch_field(data, self.out_field))
+        out_dict = fetch_dict_copy(data, self.out_field)
 
         result_dict = {
             "dt": peak_lag,
@@ -155,14 +155,6 @@ class LikeLag(Node):
         store_field(data, self.out_field, out_dict)
         
         return True
-
-def copy_dict_or_empty(fetch_result: tuple[Optional[dict], bool]):
-    maybe_dict, is_valid = fetch_result
-
-    if is_valid:
-        return maybe_dict.copy()
-    else:
-        return {}
 
 def first_event_after(series: TimeSeries, start: float):
     events = series.times

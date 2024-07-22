@@ -31,5 +31,7 @@ from .GenTimeDist import GenTimeDist
 
 from .TrueTimes import TrueTimes
 from .SmearTimes import SmearTimes
+from .DynamicTrueTimes import DynamicTrueTimes
+from .RandomParameter import RandomParameter
 
 from .Uniform import Uniform
