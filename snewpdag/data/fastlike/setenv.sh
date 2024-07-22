@@ -30,5 +30,4 @@ export SN_TIME="'$TIME_ROOT:01'"
 export SN_SAMPLE_START="'$TIME_ROOT:00'"
 export SN_SAMPLE_STOP="'$TIME_ROOT:16'"
 
-# Replace with constant for time-independent filepaths
 export NOW=$( date '+%F_%H.%M.%S' )

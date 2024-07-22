@@ -13,7 +13,7 @@ parser.add_argument('detectors', nargs='+', choices=defined_detectors)
 args = parser.parse_args()
 
 dets = args.detectors
-output_dir = outroot + f"fastlike/{'-'.join(dets)}@$NOW/"
+output_dir = outroot + f"fastlike/{'-'.join(dets)}/$NOW/"
 
 det_pairs = []
 for i, det1 in enumerate(dets):

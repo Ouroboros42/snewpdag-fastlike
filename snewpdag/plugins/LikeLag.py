@@ -52,9 +52,6 @@ class LikeLag(Node):
     def tbin_width(self) -> float:
         return self.twidth / self.tnbins
 
-    def get_bin_background_rate(self, background_rate: float) -> float:
-        return background_rate * self.tbin_width
-
     def get_time_bound(self, compare: Callable[[float, float], float], preset_bound_1: Optional[float], preset_bound_2: Optional[float], first_1: float, first_2: float) -> float:
         if preset_bound_1 is None and preset_bound_2 is None:
             return compare(first_1, first_2)
@@ -84,15 +81,12 @@ class LikeLag(Node):
         if not series_2_valid:
             return False
 
-        bin_background1 = self.get_bin_background_rate(self.det1_bg)
-        bin_background2 = self.get_bin_background_rate(self.det2_bg)
-
         series_start, series_stop = self.get_period(time_series_1, time_series_2)
 
         n_events_1 = time_series_1.integral(series_start, series_stop)
         n_events_2 = time_series_2.integral(series_start, series_stop)
 
-        detectors = DetectorRelation(bin_background1, bin_background2, int(n_events_1), int(n_events_2), self.tnbins)
+        detectors = DetectorRelation.from_counts(self.det1_bg, self.det2_bg, int(n_events_1), int(n_events_2), series_stop - series_start, self.tbin_width)
 
         hist_start_1 = series_start + self.lead_time + self.max_lag
         hist_stop_1 = hist_start_1 + self.twidth

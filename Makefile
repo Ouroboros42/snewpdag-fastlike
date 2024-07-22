@@ -83,6 +83,19 @@ fd2210:
 	# alternative (need to format the json lines for input):
 	# python -m snewpdag --log INFO --jsonlines snewpdag/data/fd2209.csv < snewpdag/data/fd2209b-data.json
 
+snewpdag/data/fastlike/*.csv: snewpdag/data/fastlike/compare.py snewpdag/data/fastlike/writeconfig.py
+
+snewpdag/data/fastlike/allpairs.csv:
+	python $< $@ IC JUNO SK LVD SNOP
+
+snewpdag/data/fastlike/quick.csv:
+	python $< $@ LVD SNOP
+
+fastlikeconfig: snewpdag/data/fastlike/allpairs.csv snewpdag/data/fastlike/quick.csv
+
+testfastlike: snewpdag/data/fastlike/quick.csv
+	condor_submit condor/small.sub
+
 snews_pt_subscribe:
 	snews_pt subscribe --no-firedrill -p '-m snewpdag snewpdag/data/fd2210.csv --input'
 
@@ -92,4 +105,4 @@ snews_pt_publish:
 init:
 	pip install -r requirements.txt
 
-.PHONY: init run test histogram trial trial2 runtest
+.PHONY: init run test histogram trial trial2 runtest testfastlike fastlikeconfig
