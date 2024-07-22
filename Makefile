@@ -94,7 +94,7 @@ snewpdag/data/fastlike/quick.csv:
 fastlikeconfig: snewpdag/data/fastlike/allpairs.csv snewpdag/data/fastlike/quick.csv
 
 testfastlike: snewpdag/data/fastlike/quick.csv
-	condor_submit condor/small.sub
+	snewpdag/data/fastlike/runtest.sh $< 2
 
 snews_pt_subscribe:
 	snews_pt subscribe --no-firedrill -p '-m snewpdag snewpdag/data/fd2210.csv --input'
