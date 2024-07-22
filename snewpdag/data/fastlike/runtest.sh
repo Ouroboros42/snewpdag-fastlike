@@ -4,7 +4,5 @@ cd /home/jesu4059/snewpdag-fastlike
 . snewpdag/data/fastlike/setenv.sh
 echo "Environment setup"
 
-
-
-python snewpdag/trials/Simple.py Control -n $N_TRIALS | \
+python snewpdag/trials/Simple.py Control -n ${2:-$N_TRIALS} | \
 python -m snewpdag --log $LOG_LEVEL --jsonlines $1

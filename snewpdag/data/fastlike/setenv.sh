@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-export N_TRIALS=1000
+export N_TRIALS=100
 export LOG_LEVEL=WARNING
 
 export MODEL=s27.0co #e.g., s27.0co or s11.2c
@@ -21,7 +21,6 @@ export NBINS=7500
 export WINDOW=15
 
 export NLAGMESH=100
-
 
 export SN_RA=-60.0
 export SN_DEC=-30.0
