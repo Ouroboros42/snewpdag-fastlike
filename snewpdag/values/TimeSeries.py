@@ -82,3 +82,16 @@ class TimeSeries:
       else: # both limits
         return np.sum((self.times >= t0) & (self.times < t1))
 
+  @property
+  def data_start(self):
+    if self.start is None:
+      return np.min(self.times)
+
+    return self.start
+  
+  @property
+  def data_stop(self):
+    if self.stop is None:
+      return np.max(self.times)
+    
+    return self.stop

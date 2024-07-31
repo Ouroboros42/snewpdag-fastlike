@@ -17,10 +17,12 @@ export BG_JUNO=1
 export YIELD_IC=660000
 export BG_IC=1500000
 
-export NBINS=7500
 export WINDOW=15
+export BIN_WIDTH=0.002
 
-export NLAGMESH=100
+export LAG_MESH_STEP=0.002
+
+export RATE_DECAY=${RATE_DECAY:-1}
 
 TIME_ROOT="2021-11-01 05:22"
 export SN_TIME="'$TIME_ROOT:01'"
@@ -28,3 +30,4 @@ export SN_SAMPLE_START="'$TIME_ROOT:00'"
 export SN_SAMPLE_STOP="'$TIME_ROOT:16'"
 
 export NOW=$( date '+%F_%H.%M.%S' )
+export OUT_DIR_NAME=${LABEL:-"T=$NOW"}

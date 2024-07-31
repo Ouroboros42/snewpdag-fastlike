@@ -35,7 +35,7 @@ class PairPullPlot(Node):
         plot_x = np.linspace(np.min(bins), np.max(bins), len(bins) * 10, dtype=np.float64)
         fit_y = fit.pdf(plot_x)
         ax.plot(plot_x, fit_y, label=f"Normal fit, mean={mean:.4f}, std={std:.4f}")
-        ax.set_xlabel("Pull Score")
+        ax.set_xlabel("Score")
         ax.set_ylabel("Frequency")
         ax.legend()
         fig.savefig(filename, dpi=1000, bbox_inches='tight')

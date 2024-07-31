@@ -6,12 +6,20 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fill_filename, fetch_field, store_field
 
 class PairTrialPlot(Node):
-    def __init__(self, in_dt_field, filename, in_true_t1_field = None, in_true_t2_field = None, title="Lag Estimator", **kwargs):
+    def __init__(self,
+        filename, in_dt_field,
+        in_true_t1_field = None, in_true_t2_field = None,
+        title="Lag Estimator",
+        colours = [ "coral", "slateblue", "fuchsia", "turquoise", "goldenrod" ],
+        sig_fig = 5,
+    **kwargs):
         self.in_dt_field = in_dt_field
         self.in_true_t1_field = in_true_t1_field
         self.in_true_t2_field = in_true_t2_field
         self.filename = filename
         self.title=title
+        self.colours=colours
+        self.sig_fig=sig_fig
         self.count=0
         super().__init__(**kwargs)
     
@@ -32,14 +40,30 @@ class PairTrialPlot(Node):
 
         fig, ax = plt.subplots()
         ax.set_title(self.title)
-        ax.scatter(dtinfo['lag_mesh'], dtinfo['likelihoods'])
-        ax.scatter(dtinfo['opt_lags'], dtinfo['opt_likelihoods'])
+
+        for (method, results), colour in zip(dtinfo.items(), self.colours):
+            if 'mesh' in results:
+                mesh = results['mesh']
+                ax.scatter(mesh['lags'], mesh['log_likelihoods'], color=colour)
+
+            if 'dt' in results:
+                dt = results['dt']
+                dt_str = f"{dt:.{self.sig_fig}g}"
+                if 'dt_err' in results:
+                    dt_err = results['dt_err']
+                    if isinstance(dt_err, (list, tuple)):
+                        dt_err_neg, dt_err_pos = dt_err
+                        dt_str += f"\\pm_{{{dt_err_neg:.{self.sig_fig}g}}}^{{{dt_err_pos:.{self.sig_fig}g}}}"
+                    else:
+                        dt_err_pos = dt_err_neg = dt_err
+                        dt_str += f"\\pm{dt_err:.{self.sig_fig}g}"
+
+                ax.axvline(x=dt, label=f"{method} dt = ${dt_str}$", color=colour)
+                ax.axvspan(xmin=dt-dt_err_neg, xmax=dt+dt_err_pos, alpha=0.1, color=colour)
 
         if has_true_dt:
-            ax.axvline(x=true_dt, color='green', label=f"True dt = {true_dt}")
+            ax.axvline(x=true_dt, color='green', label=f"True dt = ${true_dt:.{self.sig_fig}g}$")
 
-        ax.axvline(x=dtinfo['dt'], color='blue', label=f"Curve dt = {dtinfo['dt']}")
-        ax.axvline(x=dtinfo['opt_dt'], color='orange', label=f"Opt dt = {dtinfo['opt_dt']}")
         ax.legend()
         ax.set_xlabel("Lag / s")
         ax.set_ylabel("Likelihood")

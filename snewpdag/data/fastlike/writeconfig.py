@@ -1,5 +1,7 @@
 from itertools import chain
 
+__all__ = ('LineWriter', 'tuple_pairs', 'q')
+
 class LineWriter:
     def __init__(self, file):
         self.file = file
@@ -33,3 +35,6 @@ class LineWriter:
 def tuple_pairs(*args, **kwargs):
     pair_seq = ",".join(f"('{k}',{v})" for k, v in chain(*(arg.items() for arg in args), kwargs.items()))
     return f"({pair_seq})"
+
+def q(string_contents: str):
+    return f"'{string_contents}'"

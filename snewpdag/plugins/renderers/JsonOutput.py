@@ -23,37 +23,39 @@ import numpy as np
 
 from snewpdag.dag import Node
 from snewpdag.values import TimeSeries
-from snewpdag.dag.lib import fetch_field, fill_filename
-
-def json_output_default(obj):
-  if isinstance(obj, np.ndarray):
-    return [ x for x in obj ]
-  elif isinstance(obj, TimeSeries):
-    return obj.to_dict()
-  elif isinstance(obj, numbers.Number):
-    return float(obj)
-  else:
-    raise TypeError("unjsonable type {}".format(obj))
+from snewpdag.dag.lib import fetch_field, store_field, fill_filename
 
 class JsonOutput(Node):
   def __init__(self, fields, filename, **kwargs):
     self.fields = fields
     self.filename = filename
     self.on = kwargs.pop('on', ['alert'])
+    self.suppress_unjsonable = kwargs.pop('suppress_unjsonable', False)
+    self.json_kwargs = kwargs.pop('json_kwargs', {})
     self.count = 0
     super().__init__(**kwargs)
+
+  def json_output_default(self, obj):
+    if isinstance(obj, np.ndarray):
+      return [ x for x in obj ]
+    elif isinstance(obj, TimeSeries):
+      return obj.to_dict()
+    elif isinstance(obj, numbers.Number):
+      return float(obj)
+    else:
+      if self.suppress_unjsonable:
+        obj_type = type(obj)
+        logging.debug(f"Storing unjsonable type {obj_type}")
+        return f"<<non-json type: {obj_type}>>"
+
+      raise TypeError("unjsonable type {}".format(obj))
 
   def write_json(self, data):
     d = {}
     for f in self.fields:
       v, flag = fetch_field(data, f)
       if flag:
-        #if isinstance(v, TimeSeries):
-        #  d[f] = v.to_dict()
-        #elif isinstance(v, np.ndarray):
-        #  d[f] = [ x for x in v ]
-        #else:
-        d[f] = v
+        store_field(d, f, v)
     #logging.info('{}: dict = {}'.format(self.name, d))
 
     fname = fill_filename(self.filename, self.name, self.count, data)
@@ -62,7 +64,7 @@ class JsonOutput(Node):
     else:
       logging.info('{}: writing json to {}'.format(self.name, fname))
       with open(fname, "w") as outfile:
-        json.dump(d, outfile, default=json_output_default)
+        json.dump(d, outfile, default=self.json_output_default, **self.json_kwargs)
 
       self.count += 1
     return True

@@ -7,6 +7,7 @@ Arguments:
   in_true_field: input field containing true value
   in_base_field: optional input field to subtract from true value
   out_field: output field to store (obs - (true - base)) / err
+  out_diff_field: if not None, output field to store (obs - (true - base))
   on: list of 'alert', 'report', 'revoke', 'reset'
 """
 import logging
@@ -14,13 +15,14 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fetch_field, store_field
 
 class LagPull(Node):
-  def __init__(self, out_field, in_obs_field, in_err_field, in_true_field,
-               in_base_field = None, on = ['alert'], **kwargs):
+  def __init__(self, out_field, in_obs_field, in_true_field, in_err_field = None,
+               in_base_field = None, out_diff_field = None, on = ['alert'], **kwargs):
     self.out_field = out_field
     self.in_obs_field = in_obs_field
     self.in_err_field = in_err_field
     self.in_true_field = in_true_field
     self.in_base_field = in_base_field
+    self.out_diff_field = out_diff_field
     self.on = on
     super().__init__(**kwargs)
 
@@ -42,14 +44,21 @@ class LagPull(Node):
       base, exists = fetch_field(data, self.in_base_field)
       if not exists:
         return False
-    if isinstance(err, (list, tuple)):
-      dx = obs - (truth - base)
-      sigm = abs(err[0])
-      sigp = abs(err[1])
       
-      store_field(data, self.out_field, dx / (sigm if dx < 0 else sigp))
+    dx = obs - (truth - base)
+
+    if self.out_diff_field is not None:
+      store_field(data, self.out_diff_field, dx)
+
+    if isinstance(err, (list, tuple)):
+      sig = err[dx > 0]
     else:
-      store_field(data, self.out_field, (obs - (truth - base)) / err)
+      sig = err
+
+    score = dx / abs(sig)
+
+    store_field(data, self.out_field, score)
+    
     return data
 
   def alert(self, data):

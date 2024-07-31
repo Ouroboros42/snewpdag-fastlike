@@ -1,27 +1,27 @@
-from writeconfig import LineWriter, tuple_pairs
-
-import argparse
-
-root = "/home/jesu4059/snewpdag-fastlike/"
-outroot = "/data/snoplus/lucas/snout/"
+from writeconfig import *
+from pathlib import Path
+from argparse import ArgumentParser, FileType
 
 defined_detectors = ['IC', 'JUNO', 'SK', 'LVD', 'SNOP']
 
-parser = argparse.ArgumentParser(description="Construct config csv for a fast-likelihood trial")
-parser.add_argument('outfile', type=argparse.FileType('w'))
+parser = ArgumentParser(description="Construct config csv for a fast-likelihood trial")
+parser.add_argument('config_file_out', type=FileType('w'))
+parser.add_argument('-o', dest="output_dir", type=Path, default=Path("/data/snoplus/lucas/snout/fastlike"))
 parser.add_argument('detectors', nargs='+', choices=defined_detectors)
 args = parser.parse_args()
 
+data_root = Path(__file__).parent.parent
+
 dets = args.detectors
-output_dir = outroot + f"fastlike/{'-'.join(dets)}/$NOW/"
+output_dir = args.output_dir / '-'.join(dets) / "$OUT_DIR_NAME"
 
 det_pairs = []
 for i, det1 in enumerate(dets):
     for det2 in dets[i+1:]:
         det_pairs.append((det1, det2))
 
-with args.outfile as outfile:
-    w = LineWriter(outfile)
+with args.config_file_out as config_file_out:
+    w = LineWriter(config_file_out)
 
     w.module("Control", "Pass", line=1)
     w.newline()
@@ -31,15 +31,18 @@ with args.outfile as outfile:
     w.module("SN","Write",
         on=['alert','report'],
         write= tuple_pairs(
-            { "truth/sn_spec/time": "$SN_TIME" },
-            { "estimator/event_hist/nbins": "$NBINS", "estimator/event_hist/twindow": "$WINDOW" },
-            { "estimator/likelihood_mesh/npoints": "$NLAGMESH" },
-            { "truth/model": "'$MODEL'", "truth/species": "'$SPECIES'" },
+            {
+                "truth/sn_spec/time": "$SN_TIME",
+                "estimator/event_hist/bin_width": "$BIN_WIDTH", "estimator/event_hist/window": "$WINDOW",
+                "estimator/polyfit/mesh_spacing": "$LAG_MESH_STEP",
+                "truth/model": "'$MODEL'", "truth/species": "'$SPECIES'",
+                "fpatterns/trial_png": q(output_dir / "imgs" / "trials" / "{}-{}-{}.png"),
+                "fpatterns/trial_json": q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"),
+                "fpatterns/report_png": q(output_dir / "imgs" / "reports" / "{}-{}-{}.png"),
+                "fpatterns/report_json": q(output_dir / "jsons" / "reports" / "{}-{}-{}.json"),
+            },
             { f"truth/dets/{det}/yield": f"$YIELD_{det}" for det in dets },
             { f"truth/dets/{det}/background": f"$BG_{det}" for det in dets },
-            png_pattern=f"'{output_dir}imgs/{{}}-{{}}-{{}}.png'",
-            pickle_pattern=f"'{output_dir}jar/{{}}-{{}}-{{}}.pickle'",
-            json_pattern=f"'{output_dir}jsons/{{}}-{{}}-{{}}.json'",
             coincident_detectors=dets,
         )
     )
@@ -52,7 +55,7 @@ with args.outfile as outfile:
     )
     
     w.module("SN-times", "gen.DynamicTrueTimes",
-        detector_location=f"'{root}snewpdag/data/detector_location.csv'",
+        detector_location=q(data_root / 'detector_location.csv'),
         detectors=dets,
         sn_spec_field="'truth/sn_spec'",
     )
@@ -78,68 +81,74 @@ with args.outfile as outfile:
     w.newline()
     for det1, det2 in det_pairs:
         pairkey = f"{det1}-{det2}"
+        pair_field = ('det_pairs', pairkey)
+        binning_field = (*pair_field, 'binning')
 
-        w.module(f"diff-{pairkey}", "LikeLag",
+        w.module(f"bin-{pairkey}", "fastlike.HistCompare", 
             in_series1_field=('timeseries', det1), in_series2_field=('timeseries',det2),
-            out_field="'dts'", out_key=f"'{pairkey}'",
+            out_field=binning_field,
+            bin_width="$BIN_WIDTH", window="$WINDOW",
             det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}",
-            tnbins="$NBINS", twidth="$WINDOW", nlags="$NLAGMESH"
+            source_suppression="$RATE_DECAY"
         )
 
-        w.module(f"pull-score-{pairkey}", "LagPull",
-            out_field=('dts',pairkey,'pull_score'),
-            in_obs_field=('dts',pairkey,'dt'),
-            in_err_field=('dts',pairkey,'dt_err'),
-            in_true_field=('truth','dets',det1,'true_t'),
-            in_base_field=('truth','dets',det2,'true_t')
+        methods_field = (*pair_field, 'lag_methods')
+
+        true_t1_field = ('truth', 'dets', det1, 'true_t')
+        true_t2_field = ('truth', 'dets', det2, 'true_t')
+
+        for method_name, plugin_class, kwargs in (
+            ("anneal", "fastlike.AnnealLag", { "mesh_spacing": "$LAG_MESH_STEP" }),
+            ("polyfit", "fastlike.PolyFitLag", { "mesh_spacing": "$LAG_MESH_STEP" }),
+        ):
+            method_field = (*methods_field, method_name)
+
+            w.module(f"lag-{method_name}-{pairkey}", plugin_class, in_field = binning_field, out_field = method_field, **kwargs)
+
+            w.module(f"pull-score-{method_name}-{pairkey}", "LagPull",
+                out_field=(*method_field, 'pull_score'),
+                out_diff_field=(*method_field, 'raw_error'),
+                in_obs_field=(*method_field, 'dt'),
+                in_err_field=(*method_field, 'dt_err'),
+                in_true_field=true_t1_field,
+                in_base_field=true_t2_field
+            )
+
+            w.module(f"pull-acc-{method_name}-{pairkey}", "Accumulator",
+                title=f"'Pull Scores for {method_name}: {det1}-{det2}'",
+                in_field=(*method_field, 'pull_score'),
+                out_field=(*method_field, 'pull_scores'),
+                alert_pass=True, clear_on=[]
+            )
+            w.module(f"pull-plot-{method_name}-{pairkey}", "renderers.fastlike.PairPullPlot",
+                in_pull_field = (*method_field, 'pull_scores'),
+                filename = "'[fpatterns/report_png]'", 
+            )
+
+            w.module(f"err-acc-{method_name}-{pairkey}", "Accumulator",
+                title=f"'Errors for {method_name}: {det1}-{det2}'",
+                in_field=(*method_field, 'raw_error'),
+                out_field=(*method_field, 'raw_errors'),
+                alert_pass=True, clear_on=[]
+            )
+            w.module(f"err-plot-{method_name}-{pairkey}", "renderers.fastlike.PairPullPlot",
+                title="'Error Distribution'",
+                in_pull_field = (*method_field, 'raw_errors'),
+                filename = "'[fpatterns/report_png]'", 
+            )
+
+        w.module(f"plot-diffs-{pairkey}", "renderers.fastlike.PairTrialPlot",
+            in_dt_field = methods_field,
+            in_true_t1_field = true_t1_field,
+            in_true_t2_field = true_t2_field,
+            filename = "'[fpatterns/trial_png]'", 
         )
 
-        w.module(f"pull-acc-{pairkey}", "Accumulator",
-            title=f"'pull_scores_{det1}_{det2}'",
-            in_field=('dts',pairkey,'pull_score'),
-            out_field=('analysis','pulls',pairkey),
-            alert_pass=True, clear_on=[]
-        )
-        
-        w.module(f"opt-pull-score-{pairkey}", "LagPull",
-            out_field=('dts',pairkey,'opt_pull_score'),
-            in_obs_field=('dts',pairkey,'opt_dt'),
-            in_err_field=('dts',pairkey,'dt_err'),
-            in_true_field=('truth','dets',det1,'true_t'),
-            in_base_field=('truth','dets',det2,'true_t')
-        )
-
-        w.module(f"opt-pull-acc-{pairkey}", "Accumulator",
-            title=f"'opt_pull_scores_{pairkey}'",
-            in_field=('dts',pairkey,'opt_pull_score'),
-            out_field=('analysis','opt_pulls',pairkey),
-            alert_pass=True, clear_on=[]
-        )
-
-        w.module(f"plot-diff-{pairkey}", "renderers.fastlike.PairTrialPlot",
-            in_dt_field = ('dts',pairkey),
-            in_true_t1_field = ('truth','dets',det1,'true_t'),
-            in_true_t2_field = ('truth','dets',det2,'true_t'),
-            filename = "'[png_pattern]'", 
-        )
-
-        w.module(f"fit-pull-plot-{pairkey}", "renderers.fastlike.PairPullPlot",
-            in_pull_field = ('analysis', 'pulls', pairkey),
-            filename = "'[png_pattern]'", 
-        )
-
-        w.module(f"opt-pull-plot-{pairkey}", "renderers.fastlike.PairPullPlot",
-            in_pull_field = ('analysis', 'opt_pulls', pairkey),
-            filename = "'[png_pattern]'", 
-        )
-
-    w.newline()
-    
-    # w.module("FullPickle", "renderers.PickleOutput", filename="'[pickle_pattern]'")
+        w.newline()
 
     global_info = ['coincident_detectors', 'estimator', 'truth']
-    trial_info = global_info + ['dts']
+    trial_info = global_info + ['det_pairs']
     pull_info = global_info + ['analysis']
 
-    w.module("TrialInfo", "renderers.JsonOutput", filename="'[json_pattern]'", on=['alert'], fields=trial_info)
-    w.module("PullInfo", "renderers.JsonOutput", filename="'[json_pattern]'", on=['report'], fields=pull_info)
+    w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=trial_info, filename="'[fpatterns/trial_json]'", suppress_unjsonable=True)
+    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=pull_info, filename="'[fpatterns/report_json]'", suppress_unjsonable=True)
