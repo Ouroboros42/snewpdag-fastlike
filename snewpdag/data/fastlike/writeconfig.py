@@ -1,4 +1,5 @@
 from itertools import chain
+import os
 
 __all__ = ('LineWriter', 'tuple_pairs', 'q')
 
@@ -7,6 +8,18 @@ class LineWriter:
         self.file = file
         self.prev = None
     
+    @classmethod
+    def from_path(cls, fpath):
+        os.makedirs(os.path.dirname(fpath), exist_ok=True)
+        return cls(open(fpath, "w"))
+    
+    def __enter__(self):
+        self.file.__enter__()
+        return self
+    
+    def __exit__(self, *args, **kwargs):
+        return self.file.__exit__(*args, **kwargs)
+        
     @staticmethod
     def flat_dict(d: dict):
         return ",".join(f"'{k}':{v}" for k, v in d.items())

@@ -83,18 +83,23 @@ fd2210:
 	# alternative (need to format the json lines for input):
 	# python -m snewpdag --log INFO --jsonlines snewpdag/data/fd2209.csv < snewpdag/data/fd2209b-data.json
 
-snewpdag/data/fastlike/*.csv: snewpdag/data/fastlike/compare.py snewpdag/data/fastlike/writeconfig.py
+# Fast Likelihood stuff
+FL_DAT_ROOT = snewpdag/data/fastlike
+FL_CONF_ROOT = $(FL_DAT_ROOT)/configs
+FL_CONF_DEPS = $(FL_DAT_ROOT)/compare.py $(FL_DAT_ROOT)/writeconfig.py
 
-snewpdag/data/fastlike/allpairs.csv:
+$(FL_CONF_ROOT)/allpairs.csv: $(FL_CONF_DEPS)
 	python $< $@ IC JUNO SK LVD SNOP
-
-snewpdag/data/fastlike/quick.csv:
+$(FL_CONF_ROOT)/quick.csv: $(FL_CONF_DEPS)
 	python $< $@ LVD SNOP
 
-fastlikeconfig: snewpdag/data/fastlike/allpairs.csv snewpdag/data/fastlike/quick.csv
+fastlikeconfig: $(FL_CONF_ROOT)/allpairs.csv $(FL_CONF_ROOT)/quick.csv
+testfastlike: $(FL_CONF_ROOT)/quick.csv
+	snewpdag/data/fastlike/runtest.sh $< ./output 2
 
-testfastlike: snewpdag/data/fastlike/quick.csv
-	snewpdag/data/fastlike/runtest.sh $< 2
+empty_excluding = find $1 ! -wholename '$1' \( ! -type d -o -empty \)  $(foreach exclude,$2,! -path '$(exclude)') -delete
+cleanout:
+	$(call empty_excluding,output,output/README.md)
 
 snews_pt_subscribe:
 	snews_pt subscribe --no-firedrill -p '-m snewpdag snewpdag/data/fd2210.csv --input'
@@ -105,4 +110,4 @@ snews_pt_publish:
 init:
 	pip install -r requirements.txt
 
-.PHONY: init run test histogram trial trial2 runtest testfastlike fastlikeconfig
+.PHONY: init run test histogram trial trial2 runtest testfastlike fastlikeconfig cleanout

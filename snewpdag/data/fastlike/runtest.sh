@@ -1,9 +1,19 @@
 #!/usr/bin/bash
-cd /home/jesu4059/snewpdag-fastlike
+
+RUN_CONFIG=$1 # CSV File to setup DAG
+OUT_ROOT=$2 # Directory to put outputs in
+
+# Defaults defined in env/runparams.sh
+N_TRIALS=${3:-$N_TRIALS} # Number of trials to run
+LABEL=${4:-$LABEL} # Subdir of 
+
+cd ${PROJECT_ROOT:=.} # Set from condor for correct working dir
+
 . pyvenv/bin/activate
-. snewpdag/data/fastlike/setenv.sh
-N_TRIALS_INPUT=${2:-$N_TRIALS}
-echo "Environment setup for $(basename $1), $OUT_DIR_NAME"
-echo "Running $N_TRIALS_INPUT trials"
-python snewpdag/trials/Simple.py Control -n $N_TRIALS_INPUT | \
-python -m snewpdag --log $LOG_LEVEL --jsonlines $1
+. snewpdag/data/fastlike/loadenv.sh
+
+echo "Environment setup"
+echo "Running $N_TRIALS trials"
+
+python snewpdag/trials/Simple.py Control -n $N_TRIALS | \
+python -m snewpdag --log $LOG_LEVEL --jsonlines $RUN_CONFIG

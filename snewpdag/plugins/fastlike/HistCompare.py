@@ -74,6 +74,8 @@ class HistCompare(Node):
             return dets.log_likelihood(self.fact_cache, hist_1, get_hist_2(lag), self.rel_precision)
 
         return store_dict_field(data, self.out_field,
+            bin_width = self.bin_width,
+            n_bins = self.n_bins,
             original_edges = edges,
             hist_1 = hist_1,
             hist_2 = get_hist_2(0),

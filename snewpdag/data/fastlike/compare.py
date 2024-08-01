@@ -5,24 +5,20 @@ from argparse import ArgumentParser, FileType
 defined_detectors = ['IC', 'JUNO', 'SK', 'LVD', 'SNOP']
 
 parser = ArgumentParser(description="Construct config csv for a fast-likelihood trial")
-parser.add_argument('config_file_out', type=FileType('w'))
-parser.add_argument('-o', dest="output_dir", type=Path, default=Path("/data/snoplus/lucas/snout/fastlike"))
+parser.add_argument('config_file_out', type=Path)
 parser.add_argument('detectors', nargs='+', choices=defined_detectors)
 args = parser.parse_args()
 
-data_root = Path(__file__).parent.parent
-
 dets = args.detectors
-output_dir = args.output_dir / '-'.join(dets) / "$OUT_DIR_NAME"
+
+output_dir = Path("$OUT_DIR")
 
 det_pairs = []
 for i, det1 in enumerate(dets):
     for det2 in dets[i+1:]:
         det_pairs.append((det1, det2))
 
-with args.config_file_out as config_file_out:
-    w = LineWriter(config_file_out)
-
+with LineWriter.from_path(args.config_file_out) as w:
     w.module("Control", "Pass", line=1)
     w.newline()
     w.comment("Accelerated Likelihood Calculation with background")
@@ -55,7 +51,7 @@ with args.config_file_out as config_file_out:
     )
     
     w.module("SN-times", "gen.DynamicTrueTimes",
-        detector_location=q(data_root / 'detector_location.csv'),
+        detector_location="'$DETECTOR_LOCATIONS'",
         detectors=dets,
         sn_spec_field="'truth/sn_spec'",
     )
@@ -69,8 +65,8 @@ with args.config_file_out as config_file_out:
         w.module(f"{det}-signal","gen.GenTimeDist",
             field=('timeseries',det),
             sig_mean=f"$YIELD_{det}", sig_t0=('truth','dets',det,'true_t'),
-            sig_filetype="'tng'",
-            sig_filename="'/home/tseng/dev/snews/numodels/ls220-$MODEL/neutrino_signal_$SPECIES-LS220-$MODEL.data'"
+            sig_filetype="$SIGNAL_FILETYPE",
+            sig_filename="'$SIGNAL_FILE'"
         )
         w.module(f"{det}-bg", "gen.Uniform",
             field=('timeseries',det),
@@ -88,8 +84,7 @@ with args.config_file_out as config_file_out:
             in_series1_field=('timeseries', det1), in_series2_field=('timeseries',det2),
             out_field=binning_field,
             bin_width="$BIN_WIDTH", window="$WINDOW",
-            det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}",
-            source_suppression="$RATE_DECAY"
+            det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}"
         )
 
         methods_field = (*pair_field, 'lag_methods')
