@@ -8,6 +8,8 @@ SN_TIME="'$SN_TIME_ROOT:01'"
 SN_SAMPLE_START="'$SN_TIME_ROOT:00'"
 SN_SAMPLE_STOP="'$SN_TIME_ROOT:16'"
 
+WINDOW=15
+
 DETECTOR_LOCATIONS="$PROJECT_ROOT/snewpdag/data/detector_location.csv"
 
 SIGNAL_FILE="/home/tseng/dev/snews/numodels/ls220-$MODEL/neutrino_signal_$SPECIES-LS220-$MODEL.data"

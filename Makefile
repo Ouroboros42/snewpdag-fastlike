@@ -93,9 +93,10 @@ $(FL_CONF_ROOT)/allpairs.csv: $(FL_CONF_DEPS)
 $(FL_CONF_ROOT)/quick.csv: $(FL_CONF_DEPS)
 	python $< $@ LVD SNOP
 
+N_TRIALS = 2
 fastlikeconfig: $(FL_CONF_ROOT)/allpairs.csv $(FL_CONF_ROOT)/quick.csv
 testfastlike: $(FL_CONF_ROOT)/quick.csv
-	snewpdag/data/fastlike/runtest.sh $< ./output 2
+	snewpdag/data/fastlike/runtest.sh $< ./output $(N_TRIALS)
 
 empty_excluding = find $1 ! -wholename '$1' \( ! -type d -o -empty \)  $(foreach exclude,$2,! -path '$(exclude)') -delete
 cleanout:

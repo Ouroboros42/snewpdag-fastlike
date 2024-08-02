@@ -2,6 +2,23 @@ from writeconfig import *
 from pathlib import Path
 from argparse import ArgumentParser, FileType
 
+# Important parameter lists:
+bin_widths = [ 0.002, 0.02 ]
+mesh_spacings = [ 0.002, 0.001 ]
+
+likelihood_methods = (
+    ("fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 }),
+    ("roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 })
+)
+
+estimator_methods =  (
+    ("cumprob", "fastlike.estimators.NeymanEst", {  }),
+    ("meanvar", "fastlike.estimators.MeanVarEst", {  }),
+    ("polyfit", "fastlike.estimators.PolyFitEst", {  }),
+)
+
+img_type = 'png'
+
 defined_detectors = ['IC', 'JUNO', 'SK', 'LVD', 'SNOP']
 
 parser = ArgumentParser(description="Construct config csv for a fast-likelihood trial")
@@ -13,10 +30,18 @@ dets = args.detectors
 
 output_dir = Path("$OUT_DIR")
 
-det_pairs = []
-for i, det1 in enumerate(dets):
-    for det2 in dets[i+1:]:
-        det_pairs.append((det1, det2))
+img_outdir = output_dir / 'imgs'
+json_outdir = output_dir / 'jsons'
+
+def cartesian_product(a: list, b: list, asymmetric: bool = False):
+    pairs = []
+    for i, a_item in enumerate(a):
+        for j, b_item in enumerate(b):
+            if (i < j or not asymmetric):
+                pairs.append((a_item, b_item))
+    return pairs
+
+det_pairs = cartesian_product(dets, dets, True)
 
 with LineWriter.from_path(args.config_file_out) as w:
     w.module("Control", "Pass", line=1)
@@ -29,13 +54,9 @@ with LineWriter.from_path(args.config_file_out) as w:
         write= tuple_pairs(
             {
                 "truth/sn_spec/time": "$SN_TIME",
-                "estimator/event_hist/bin_width": "$BIN_WIDTH", "estimator/event_hist/window": "$WINDOW",
-                "estimator/polyfit/mesh_spacing": "$LAG_MESH_STEP",
                 "truth/model": "'$MODEL'", "truth/species": "'$SPECIES'",
-                "fpatterns/trial_png": q(output_dir / "imgs" / "trials" / "{}-{}-{}.png"),
-                "fpatterns/trial_json": q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"),
-                "fpatterns/report_png": q(output_dir / "imgs" / "reports" / "{}-{}-{}.png"),
-                "fpatterns/report_json": q(output_dir / "jsons" / "reports" / "{}-{}-{}.json"),
+                "fpatterns/trial_json": q(json_outdir / "trials" / "{}-{}-{}.json"),
+                "fpatterns/report_json": q(json_outdir / "reports" / "{}-{}-{}.json"),
             },
             { f"truth/dets/{det}/yield": f"$YIELD_{det}" for det in dets },
             { f"truth/dets/{det}/background": f"$BG_{det}" for det in dets },
@@ -74,76 +95,120 @@ with LineWriter.from_path(args.config_file_out) as w:
             tmin="$SN_SAMPLE_START", tmax="$SN_SAMPLE_STOP"
         )
 
-    w.newline()
     for det1, det2 in det_pairs:
+        w.newline()
+
         pairkey = f"{det1}-{det2}"
         pair_field = ('det_pairs', pairkey)
-        binning_field = (*pair_field, 'binning')
-
-        w.module(f"bin-{pairkey}", "fastlike.HistCompare", 
-            in_series1_field=('timeseries', det1), in_series2_field=('timeseries',det2),
-            out_field=binning_field,
-            bin_width="$BIN_WIDTH", window="$WINDOW",
-            det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}"
-        )
-
-        methods_field = (*pair_field, 'lag_methods')
 
         true_t1_field = ('truth', 'dets', det1, 'true_t')
         true_t2_field = ('truth', 'dets', det2, 'true_t')
 
-        for method_name, plugin_class, kwargs in (
-            ("anneal", "fastlike.AnnealLag", { "mesh_spacing": "$LAG_MESH_STEP" }),
-            ("polyfit", "fastlike.PolyFitLag", { "mesh_spacing": "$LAG_MESH_STEP" }),
-        ):
-            method_field = (*methods_field, method_name)
+        for bin_width in bin_widths:
+            binning_field = (*pair_field, 'binnings')
+            binning_name_suffix = f"{bin_width}s-bin_{pairkey}"
 
-            w.module(f"lag-{method_name}-{pairkey}", plugin_class, in_field = binning_field, out_field = method_field, **kwargs)
-
-            w.module(f"pull-score-{method_name}-{pairkey}", "LagPull",
-                out_field=(*method_field, 'pull_score'),
-                out_diff_field=(*method_field, 'raw_error'),
-                in_obs_field=(*method_field, 'dt'),
-                in_err_field=(*method_field, 'dt_err'),
-                in_true_field=true_t1_field,
-                in_base_field=true_t2_field
+            w.module(binning_name_suffix, "fastlike.SeriesBinning", 
+                in_series1_field=('timeseries', det1), in_series2_field=('timeseries',det2),
+                out_field=binning_field,
+                bin_width=bin_width, window="$WINDOW",
+                det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}"
             )
 
-            w.module(f"pull-acc-{method_name}-{pairkey}", "Accumulator",
-                title=f"'Pull Scores for {method_name}: {det1}-{det2}'",
-                in_field=(*method_field, 'pull_score'),
-                out_field=(*method_field, 'pull_scores'),
-                alert_pass=True, clear_on=[]
-            )
-            w.module(f"pull-plot-{method_name}-{pairkey}", "renderers.fastlike.PairPullPlot",
-                in_pull_field = (*method_field, 'pull_scores'),
-                filename = "'[fpatterns/report_png]'", 
-            )
+            meshes_field = (*binning_field, 'meshes')
+            for mesh_spacing in mesh_spacings:
+                mesh_field = (*meshes_field, mesh_spacing)
+                lag_mesh_field = (*mesh_field, 'lag_mesh')
 
-            w.module(f"err-acc-{method_name}-{pairkey}", "Accumulator",
-                title=f"'Errors for {method_name}: {det1}-{det2}'",
-                in_field=(*method_field, 'raw_error'),
-                out_field=(*method_field, 'raw_errors'),
-                alert_pass=True, clear_on=[]
-            )
-            w.module(f"err-plot-{method_name}-{pairkey}", "renderers.fastlike.PairPullPlot",
-                title="'Error Distribution'",
-                in_pull_field = (*method_field, 'raw_errors'),
-                filename = "'[fpatterns/report_png]'", 
-            )
+                mesh_name_suffix = f"{mesh_spacing}s-mesh_{binning_name_suffix}"
 
-        w.module(f"plot-diffs-{pairkey}", "renderers.fastlike.PairTrialPlot",
-            in_dt_field = methods_field,
-            in_true_t1_field = true_t1_field,
-            in_true_t2_field = true_t2_field,
-            filename = "'[fpatterns/trial_png]'", 
-        )
+                w.module(mesh_name_suffix, "fastlike.SeriesBinningMesh",
+                    in_field=binning_field, out_field=mesh_field,
+                    mesh_spacing=mesh_spacing
+                )
 
-        w.newline()
+                likelihoods_field = (*mesh_field, 'likelihood_methods')
 
-    global_info = ['coincident_detectors', 'estimator', 'truth']
-    trial_info = global_info + ['det_pairs']
-    pull_info = global_info + ['analysis']
+                for like_method_name, like_plugin_class, like_kwargs in likelihood_methods:
+                    like_method_field = (*likelihoods_field, like_method_name)
+                    like_method_name_suffix = f"{like_method_name}_{mesh_name_suffix}"
+                    like_mesh_field = (*like_method_field, 'likelihood_mesh')
 
-    w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=trial_info, filename="'[fpatterns/trial_json]'", suppress_unjsonable=True)
-    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=pull_info, filename="'[fpatterns/report_json]'", suppress_unjsonable=True)
+                    w.newline()
+                    w.module(f"likemesh-{like_method_name_suffix}", like_plugin_class,
+                        in_binning_field = binning_field, in_mesh_field = mesh_field,
+                        out_field = like_mesh_field,
+                        **like_kwargs
+                    )
+
+                    est_methods_field = (*like_method_field, 'estimators')
+
+                    like_method_img_outdir = img_outdir / pairkey / like_method_name / f"bw-{bin_width}s" / f"mesh-{mesh_spacing}s"
+
+                    for est_method_name, est_plugin_class, est_kwargs in estimator_methods:
+                        est_method_field = (*est_methods_field, est_method_name)
+                        est_method_name_suffix = f"{est_method_name}_{like_method_name_suffix}"
+
+                        out_stats_field = (*pair_field, 'method_summaries', like_method_name, est_method_name, bin_width, mesh_spacing)
+                        
+                        def pull_img_pattern(pullname):
+                            return q(like_method_img_outdir / "report" / f"{est_method_name}-{pullname}-{{1}}-{{2}}.{img_type}")
+
+                        w.newline()
+                        w.module(f"lag_{est_method_name_suffix}", est_plugin_class,
+                            in_lags_field = lag_mesh_field,
+                            in_likelihoods_field = like_mesh_field,
+                            out_field = est_method_field,
+                            **est_kwargs
+                        )
+
+                        w.module(f"pull-score_{est_method_name_suffix}", "LagPull",
+                            out_field=(*est_method_field, 'pull_score'),
+                            out_diff_field=(*est_method_field, 'raw_error'),
+                            in_obs_field=(*est_method_field, 'dt'),
+                            in_err_field=(*est_method_field, 'dt_err'),
+                            in_true_field=true_t1_field,
+                            in_base_field=true_t2_field
+                        )
+
+                        w.module(f"pull-acc_{est_method_name_suffix}", "Accumulator",
+                            title=f"'Pull Scores'",
+                            in_field=(*est_method_field, 'pull_score'),
+                            out_field=(*est_method_field, 'pull_scores'),
+                            alert_pass=True, clear_on=[]
+                        )
+
+                        w.module(f"pull-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
+                            in_pull_field = (*est_method_field, 'pull_scores'),
+                            out_stats_field = (*out_stats_field, 'pull_score'),
+                            filename = pull_img_pattern("pull-scores"), 
+                        )
+
+                        w.module(f"err-acc_{est_method_name_suffix}", "Accumulator",
+                            title=f"'Errors'",
+                            in_field=(*est_method_field, 'raw_error'),
+                            out_field=(*est_method_field, 'raw_errors'),
+                            alert_pass=True, clear_on=[]
+                        )
+
+                        w.module(f"err-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
+                            title="'Error Distribution'",
+                            in_pull_field = (*est_method_field, 'raw_errors'),
+                            out_stats_field = (*out_stats_field, 'raw_error'),
+                            filename = pull_img_pattern("errors"),
+                        )
+
+                    w.module(f"plot-like+diffs_{like_method_name_suffix}", "renderers.fastlike.PairTrialPlot",
+                        in_lag_mesh_field = lag_mesh_field,
+                        in_like_mesh_field = like_mesh_field,
+                        in_ests_field = est_methods_field,
+                        in_true_t1_field = true_t1_field,
+                        in_true_t2_field = true_t2_field,
+                        filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{{1}}-{{2}}.{img_type}"), 
+                    )
+
+    save_fields = ['coincident_detectors', 'truth', 'det_pairs']
+
+    w.newline(2)
+    w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)
