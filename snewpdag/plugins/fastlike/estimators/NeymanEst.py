@@ -27,7 +27,7 @@ class NeymanEst(EstimatorBase):
     
     @staticmethod
     def lerp(x0, x1, y0, y1, x_target):
-        return (y1 - y0) / (x1 - x0) * (x_target - x0) + y0
+        return float((y1 - y0) / (x1 - x0) * (x_target - x0) + y0)
 
     @staticmethod
     def interpolate(x, y, x_target):

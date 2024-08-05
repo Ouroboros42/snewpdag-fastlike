@@ -9,16 +9,17 @@ import logging
 import numpy as np
 
 from snewpdag.dag import Node
-from snewpdag.dag.lib import fetch_field, store_field
+from snewpdag.dag.lib import fetch_field, store_field, store_dict_field
 
 class Accumulator(Node):
-  def __init__(self, title, in_field, **kwargs):
+  def __init__(self, title, in_field, override=True, **kwargs):
     self.title = title
     self.in_field = in_field
     self.out_field = kwargs.pop('out_field', None)
     self.index = kwargs.pop('in_index', None)
     self.alert_pass = kwargs.pop('alert_pass', False)
     self.clear_on = kwargs.pop('clear_on', ['revoke','reset'])
+    self.override = override
     super().__init__(**kwargs)
     self.series = []
 
@@ -45,7 +46,7 @@ class Accumulator(Node):
     if self.out_field == None:
       data.update(d)
     else:
-      store_field(data, self.out_field, d)
+      store_dict_field(data, self.out_field, self.override, **d)
     return True
 
   def revoke(self, data):

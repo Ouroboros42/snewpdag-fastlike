@@ -13,9 +13,10 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fill_filename
 
 class PickleOutput(Node):
-  def __init__(self, filename, **kwargs):
+  def __init__(self, filename, on=['alert', 'report'], **kwargs):
     self.filename = filename
     self.count = 0
+    self.on = on
     super().__init__(**kwargs)
 
   def write_pickle(self, data):
@@ -29,8 +30,15 @@ class PickleOutput(Node):
     return True
 
   def alert(self, data):
-    return self.write_pickle(data)
+    return self.write_pickle(data) if 'alert' in self.on else True
+
+  def revoke(self, data):
+    return self.write_pickle(data) if 'revoke' in self.on else True
+
+  def reset(self, data):
+    return self.write_pickle(data) if 'reset' in self.on else True
 
   def report(self, data):
-    return self.write_pickle(data)
+    return self.write_pickle(data) if 'report' in self.on else True
+
 

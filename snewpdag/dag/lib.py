@@ -65,9 +65,13 @@ def fetch_dict_copy(data, field):
   else:
     return {}
 
-def store_dict_field(data, field, **out_dict):
+def store_dict_field(data, field, override=False, **out_dict):
   target = fetch_dict_copy(data, field)
-  target.update(out_dict)
+  if override:
+    target.update(out_dict)
+  else:
+    out_dict.update(target)
+    target = out_dict
   return store_field(data, field, target)
 
 def fill_filename(pattern, module_name, count, data, create_dir=True):

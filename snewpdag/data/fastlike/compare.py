@@ -175,7 +175,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                             title=f"'Pull Scores'",
                             in_field=(*est_method_field, 'pull_score'),
                             out_field=(*est_method_field, 'pull_scores'),
-                            alert_pass=True, clear_on=[]
+                            alert_pass=True, clear_on=[], override=False,
                         )
 
                         w.module(f"pull-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
@@ -188,7 +188,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                             title=f"'Errors'",
                             in_field=(*est_method_field, 'raw_error'),
                             out_field=(*est_method_field, 'raw_errors'),
-                            alert_pass=True, clear_on=[]
+                            alert_pass=True, clear_on=[], override=False,
                         )
 
                         w.module(f"err-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
@@ -207,8 +207,16 @@ with LineWriter.from_path(args.config_file_out) as w:
                         filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{{1}}-{{2}}.{img_type}"), 
                     )
 
+        for like_method_name, like_plugin_class, like_kwargs in likelihood_methods:
+            for est_method_name, est_plugin_class, est_kwargs in estimator_methods:
+                in_stats_field = (*pair_field, 'method_summaries', like_method_name, est_method_name)
+                pair_method_name_suffix = f"{est_method_name}_{like_method_name}_{pairkey}"
+
+                # w.module(f"score-compare_{pair_method_name_suffix}", )
+
     save_fields = ['coincident_detectors', 'truth', 'det_pairs']
 
     w.newline(2)
     w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"), suppress_unjsonable=True)
-    w.module("PullInfo", "renderers.JsonOutput", on=['report'], filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("PullPickle", "renderers.PickleOutput", on=['report'], filename=q(output_dir / "jar" / "{}-{}-{}.pkl"))

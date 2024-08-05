@@ -9,25 +9,6 @@ import os, sys, argparse, json, logging, importlib, ast, csv
 import numpy as np
 from . import Node
 
-parser = argparse.ArgumentParser()
-parser.add_argument('config', help='configuration py/json/csv file')
-parser.add_argument('--input', help='input data py/json file')
-parser.add_argument('--jsonlines', action='store_true', help='each input line contains one JSON object to inject')
-parser.add_argument('--log', help='logging level')
-parser.add_argument('--seed', help='random number seed')
-parser.add_argument('--stream', help="read from the hop alert stream server")
-parser.add_argument('--action', help='default action (alert by default)',
-                    default='alert')
-parser.add_argument('--inject', help='name of default injection module',
-                    default='Control')
-args = parser.parse_args()
-if args.stream:
-  try:
-    from hop import stream
-  except:
-    logging.info('Cannot import the hop client')
-    pass
-
 # Consider using snews_pt subscribe method in a near future
 def save_message(message):
   """ Save hop alert messages to a json file.
@@ -68,6 +49,28 @@ def run():
   I know, this kind of sucks, but the alternative is importing another
   third-party module which provides more functionality than is needed here.
   """
+  
+  parser = argparse.ArgumentParser()
+  parser.add_argument('config', help='configuration py/json/csv file')
+  parser.add_argument('--input', help='input data py/json file')
+  parser.add_argument('--jsonlines', action='store_true', help='each input line contains one JSON object to inject')
+  parser.add_argument('--log', help='logging level')
+  parser.add_argument('--seed', help='random number seed')
+  parser.add_argument('--stream', help="read from the hop alert stream server")
+  parser.add_argument('--action', help='default action (alert by default)',
+                      default='alert')
+  parser.add_argument('--inject', help='name of default injection module',
+                      default='Control')
+
+  global args
+  args = parser.parse_args()
+  if args.stream:
+    try:
+      from hop import stream
+    except:
+      logging.info('Cannot import the hop client')
+      pass
+
   ##use a local kafka topic
   #alert_topic = "kafka://localhost:9092/snews.alert-test"
   ##use an online kafka topic
