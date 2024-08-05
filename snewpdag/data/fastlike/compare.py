@@ -211,4 +211,4 @@ with LineWriter.from_path(args.config_file_out) as w:
 
     w.newline(2)
     w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"), suppress_unjsonable=True)
-    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("PullInfo", "renderers.JsonOutput", on=['report'], filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)

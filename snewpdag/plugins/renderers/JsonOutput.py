@@ -26,7 +26,7 @@ from snewpdag.values import TimeSeries
 from snewpdag.dag.lib import fetch_field, store_field, fill_filename
 
 class JsonOutput(Node):
-  def __init__(self, fields, filename, **kwargs):
+  def __init__(self, filename, fields = None, **kwargs):
     self.fields = fields
     self.filename = filename
     self.on = kwargs.pop('on', ['alert'])
@@ -51,12 +51,15 @@ class JsonOutput(Node):
       raise TypeError("unjsonable type {}".format(obj))
 
   def write_json(self, data):
-    d = {}
-    for f in self.fields:
-      v, flag = fetch_field(data, f)
-      if flag:
-        store_field(d, f, v)
-    #logging.info('{}: dict = {}'.format(self.name, d))
+    if self.fields is None:
+      d = data
+    else:
+      d = {}
+      for f in self.fields:
+        v, flag = fetch_field(data, f)
+        if flag:
+          store_field(d, f, v)
+      #logging.info('{}: dict = {}'.format(self.name, d))
 
     fname = fill_filename(self.filename, self.name, self.count, data)
     if fname == None:
