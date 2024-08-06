@@ -16,8 +16,8 @@ CONF_BASE=$(basename $RUN_CONFIG)
 CONF_NAME=${CONF_BASE%.*}
 export OUT_DIR=$OUT_ROOT/$CONF_NAME/$LABEL
 
+echo "Building DAG from: $RUN_CONFIG"
 echo "Output in: $OUT_DIR"
-
 echo "Running $N_TRIALS trials"
 
 python snewpdag/trials/Simple.py Control -n $N_TRIALS | \

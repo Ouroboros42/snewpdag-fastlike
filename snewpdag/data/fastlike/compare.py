@@ -3,16 +3,21 @@ from pathlib import Path
 from argparse import ArgumentParser, FileType
 
 # Important parameter lists:
-bin_widths = [ 0.002, 0.02 ]
-mesh_spacings = [ 0.002, 0.001 ]
+bin_widths = [ 0.002, 0.005, 0.01, 0.02 ]
+mesh_spacings = [ 0.001, 0.002, 0.005 ]
 
 likelihood_methods = (
     ("fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 }),
-    ("roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 })
+    ("roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 }),
+    ("veryroughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 10 }),
+    ("approxlike", "fastlike.likelihoods.ApproxLikelihood", {}),
+    ("xcov", "fastlike.likelihoods.CrossCovariance", {}),
+    ("chisquare", "fastlike.likelihoods.ChiSquared", {}),
+    ("uniformchisquare", "fastlike.likelihoods.ChiSquared", { "uniform_var": True })
 )
 
 estimator_methods =  (
-    ("cumprob", "fastlike.estimators.NeymanEst", {  }),
+    ("cumprob", "fastlike.estimators.CumProbEst", {  }),
     ("meanvar", "fastlike.estimators.MeanVarEst", {  }),
     ("polyfit", "fastlike.estimators.PolyFitEst", {  }),
 )
@@ -49,7 +54,7 @@ with LineWriter.from_path(args.config_file_out) as w:
     w.comment("Accelerated Likelihood Calculation with background")
     w.newline()
     
-    w.module("SN","Write",
+    w.module("SN", "Write",
         on=['alert','report'],
         write= tuple_pairs(
             {

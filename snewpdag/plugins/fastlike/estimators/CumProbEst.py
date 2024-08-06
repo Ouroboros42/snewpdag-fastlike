@@ -9,7 +9,7 @@ from sys import float_info
 
 from .EstimatorBase import EstimatorBase
 
-class NeymanEst(EstimatorBase):
+class CumProbEst(EstimatorBase):
     ONESIDE_CONFIDENCE_RANGE = 0.341344746069
     CLOSE_ENOUGH_ZERO = float_info.epsilon
     CLOSE_ENOUGH_ONE = 1 - float_info.epsilon
@@ -33,8 +33,9 @@ class NeymanEst(EstimatorBase):
     def interpolate(x, y, x_target):
         """Assumes monotonically increasing"""
         exact_hits = np.nonzero(x == x_target)[0]
+
         if len(exact_hits):
-            return np.median(exact_hits)
+            return np.median(y[exact_hits])
 
         before = np.nonzero(x < x_target)[0]
         if len(before) == 0:
@@ -45,7 +46,7 @@ class NeymanEst(EstimatorBase):
 
         last_before = before[-1]
 
-        return NeymanEst.lerp(x[last_before], x[last_before+1], y[last_before], y[last_before+1], x_target)
+        return CumProbEst.lerp(x[last_before], x[last_before+1], y[last_before], y[last_before+1], x_target)
 
     def estimate_lag(self, lags: np.ndarray[float], log_likelihoods: np.ndarray[float]) -> dict:
         peak_index = np.argmax(log_likelihoods)
@@ -55,6 +56,9 @@ class NeymanEst(EstimatorBase):
         likelihoods = np.exp(log_likelihoods - max_log_likelihood)
         cum_likelihood = self.cum_integrate(likelihoods, lags)
         cum_probability = cum_likelihood / cum_likelihood[-1]
+        
+        # print(lags)
+        # print(cum_probability)
 
         median_lag = self.interpolate(cum_probability, lags, 0.5)
         

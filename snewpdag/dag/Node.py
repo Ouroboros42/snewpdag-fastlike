@@ -8,6 +8,8 @@ import logging
 
 from snewpdag.values import History
 
+from collections import deque
+
 class Node:
 
   # shared random number generator - initialized by app
@@ -54,7 +56,7 @@ class Node:
       self.observers.remove(observer)
       observer.watch_list.remove(self)
 
-  def notify(self, action, data):
+  def notify(self, action, data, start_loop=True):
     """
     Notify all observers that they need to update.
     Update history by appending name of current node.
@@ -78,9 +80,18 @@ class Node:
     #h2 = (self.name,)
     #self.last_data['history'] = h1 + h2
     # notify all observers
-    for obs in self.observers:
-      logging.debug('DEBUG:{0}: notify {1}'.format(self.name, obs.name))
-      obs.update(self.last_data)
+    
+    if start_loop:
+      queue = deque((obs, self.last_data) for obs in self.observers)
+      while queue:
+        next_node, next_data = queue.popleft()
+        result = next_node.update(next_data, False)
+        if result is not None:
+          queue.extend((obs, result) for obs in next_node.observers)
+          logging.debug(f'DEBUG:{next_node.name}: notify {", ".join(obs.name for obs in next_node.observers)}')
+
+    else:
+      return self.last_data
 
 #
 # entry points
@@ -143,7 +154,7 @@ class Node:
                   self.name, data['action']))
     return False
 
-  def update(self, data):
+  def update(self, data, start_loop=True):
     """
     Update this object with provided data.
     If you know what you're doing, override this method to perform calculations.
@@ -179,11 +190,11 @@ class Node:
         v = self.other(cdata)
 
       if v == True:
-        self.notify(action, cdata) # notify() will update history
+        return self.notify(action, cdata, start_loop) # notify() will update history
       elif v == False:
         return
       elif type(v) is dict:
-        self.notify(v['action'] if 'action' in v else action, v)
+        return self.notify(v['action'] if 'action' in v else action, v, start_loop)
       else:
         logging.error('{0}: empty action response'.format(self.name))
         return

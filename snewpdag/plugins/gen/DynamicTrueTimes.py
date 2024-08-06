@@ -98,5 +98,6 @@ class DynamicTrueTimes(Node):
 
     out_dict['dets'] = ts
     store_field(data, self.out_field, out_dict)
+    
     return data
 

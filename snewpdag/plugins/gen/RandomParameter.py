@@ -36,4 +36,5 @@ class RandomParameter(Node):
         return self.random_generator(**self.generator_params)
 
     def alert(self, data):
-        return store_field(data, self.out_field, self.generate_random())
+        store_field(data, self.out_field, self.generate_random())
+        return data
