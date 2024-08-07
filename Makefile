@@ -98,7 +98,8 @@ $(FL_CONF_ROOT)/%.csv: $(FL_PARAM_ROOT)/%.json $(FL_CONF_DEPS)
 fastlikeconfig: $(ALL_CONFS)
 
 export N_TRIALS = 2
-testfastlike: $(FL_CONF_ROOT)/quick.csv
+TEST_CONF = $(if $(wildcard $(FL_PARAM_ROOT)/test.json),$(FL_CONF_ROOT)/test.csv,$(FL_CONF_ROOT)/quick.csv)
+testfastlike: $(TEST_CONF)
 	snewpdag/data/fastlike/runtest.sh $< ./output
 
 empty_excluding = find $1 ! -wholename '$1' \( ! -type d -o -empty \)  $(foreach exclude,$1/$2,! -path '$(exclude)') -delete
