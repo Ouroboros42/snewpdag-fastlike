@@ -16,9 +16,9 @@ OUT_SUBDIR=${LABEL:-"$CONF_NAME/T@$NOW"}
 
 export OUT_DIR=$OUT_ROOT/$OUT_SUBDIR
 
-echo "Building DAG from: $RUN_CONFIG"
-echo "Output in: $OUT_DIR"
-echo "Running $N_TRIALS trials"
+echo Building DAG from: $(realpath $RUN_CONFIG)
+echo Output in: $(realpath $OUT_DIR)
+echo Running $N_TRIALS trials
 
 python snewpdag/trials/Simple.py Control -n $N_TRIALS | \
 python -m snewpdag --log $LOG_LEVEL --jsonlines $RUN_CONFIG
