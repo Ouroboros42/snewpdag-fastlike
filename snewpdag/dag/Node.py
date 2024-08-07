@@ -87,7 +87,7 @@ class Node:
         next_node, next_data = queue.popleft()
         result = next_node.update(next_data, False)
         if result is not None:
-          queue.extend((obs, result) for obs in next_node.observers)
+          queue.extendleft((obs, result) for obs in next_node.observers)
           logging.debug(f'DEBUG:{next_node.name}: notify {", ".join(obs.name for obs in next_node.observers)}')
 
     else:
