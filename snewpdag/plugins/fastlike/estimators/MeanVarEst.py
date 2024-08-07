@@ -37,6 +37,5 @@ class MeanVarEst(EstimatorBase):
 
         return { 
             'dt': peak_lag,
-            'dt_err': tuple(np.sqrt(var)),
             'var': var
         }

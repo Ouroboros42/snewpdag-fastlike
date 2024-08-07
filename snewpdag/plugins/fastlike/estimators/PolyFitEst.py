@@ -36,10 +36,8 @@ class PolyFitEst(EstimatorBase):
             logging.warning("Likelihood maximum not found - positive second derivative")
 
         var = 1 / np.abs(fisher_info)
-        stddev = np.sqrt(var)
 
         return {
             'dt': peak_time,
-            'dt_err': stddev,
             'var': var
         }

@@ -27,12 +27,16 @@ class EstimatorBase(Node, metaclass=ABCMeta):
         return np.all(arr[:-1] <= arr[1:])
 
     @staticmethod
+    def arr_to_tup_or_scalar(a: np.ndarray):
+        return tuple(a) if a.shape else a.item()
+
+    @staticmethod
     def var_to_stdev(var):
-        return tuple(np.sqrt(var))
+        return EstimatorBase.arr_to_tup_or_scalar(np.sqrt(var))
     
     @staticmethod
     def stdev_to_var(stdev):
-        return tuple(np.square(stdev))
+        return EstimatorBase.arr_to_tup_or_scalar(np.square(stdev))
 
     def alert(self, data):
         lags, is_lags_valid = fetch_field(data, self.in_lags_field)
@@ -47,5 +51,11 @@ class EstimatorBase(Node, metaclass=ABCMeta):
             sort_i = lags.argsort()
             lags = lags[sort_i]
             likelihoods = likelihoods[sort_i]
+        
+        result = self.estimate_lag(lags, likelihoods)
+        if 'dt_err' in result and 'var' not in result:
+            result['var'] = self.stdev_to_var(result['dt_err'])
+        elif 'var' in result and 'dt_err' not in result:
+            result['dt_err'] = self.var_to_stdev(result['var'])
 
-        return store_dict_field(data, self.out_field, **self.estimate_lag(lags, likelihoods))
+        return store_dict_field(data, self.out_field, **result)

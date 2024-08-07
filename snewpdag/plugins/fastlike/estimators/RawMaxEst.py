@@ -22,6 +22,5 @@ class RawMaxEst(EstimatorBase):
 
         return { 
             'dt': peak_lag,
-            'dt_err': dt_err,
-            'var': self.stdev_to_var(dt_err)
+            'dt_err': dt_err
         }

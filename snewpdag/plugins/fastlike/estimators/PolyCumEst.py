@@ -36,10 +36,8 @@ class PolyCumEst(EstimatorBase):
         high_bound = valid_real_roots(cum_prob - self.HIGH_BOUND_CUM_PROB).item()
 
         dt_err = (median_lag - low_bound, high_bound - median_lag)
-        var = tuple(np.square(dt_err))
 
         return {
             'dt': median_lag,
-            'dt_err': dt_err,
-            'var': var
+            'dt_err': dt_err
         }

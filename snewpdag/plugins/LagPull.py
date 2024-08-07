@@ -51,11 +51,11 @@ class LagPull(Node):
       store_field(data, self.out_diff_field, dx)
 
     if isinstance(err, (list, tuple)):
-      sig = err[dx > 0]
+      conf = err[dx > 0]
     else:
-      sig = err
+      conf = err
 
-    score = dx / abs(sig)
+    score = dx / abs(conf)
 
     store_field(data, self.out_field, score)
     
