@@ -1,0 +1,23 @@
+{
+    "detectors" : [ "IC", "JUNO", "SK", "LVD", "SNOP" ],
+
+    "bin_widths" : [ 0.002, 0.005, 0.01, 0.02 ],
+
+    "mesh_spacings" : [ 0.001, 0.002, 0.005 ],
+    
+    "likelihood_methods" : [
+        [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ],
+        [ "roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 } ],
+        [ "veryroughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 10 } ],
+        [ "approxlike", "fastlike.likelihoods.ApproxLikelihood", {} ],
+        [ "xcov", "fastlike.likelihoods.CrossCovariance", {} ],
+        [ "chisquare", "fastlike.likelihoods.ChiSquared", {} ],
+        [ "uniformchisquare", "fastlike.likelihoods.ChiSquared", { "uniform_var": true } ]
+    ],
+
+    "estimator_methods" : [
+        [ "cumprob", "fastlike.estimators.CumProbEst", {} ],
+        [ "meanvar", "fastlike.estimators.MeanVarEst", {} ],
+        [ "polyfit", "fastlike.estimators.PolyFitEst", {} ]
+    ]
+}

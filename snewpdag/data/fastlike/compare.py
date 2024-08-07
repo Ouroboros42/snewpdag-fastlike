@@ -1,39 +1,24 @@
 from writeconfig import *
 from pathlib import Path
 from argparse import ArgumentParser, FileType
-
-# Important parameter lists:
-bin_widths = [ 0.002, 0.005, 0.01, 0.02 ]
-mesh_spacings = [ 0.001, 0.002, 0.005 ]
-
-likelihood_methods = (
-    ("fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 }),
-    ("roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 }),
-    ("veryroughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 10 }),
-    ("approxlike", "fastlike.likelihoods.ApproxLikelihood", {}),
-    ("xcov", "fastlike.likelihoods.CrossCovariance", {}),
-    ("chisquare", "fastlike.likelihoods.ChiSquared", {}),
-    ("uniformchisquare", "fastlike.likelihoods.ChiSquared", { "uniform_var": True })
-)
-
-estimator_methods =  (
-    ("cumprob", "fastlike.estimators.CumProbEst", {  }),
-    ("meanvar", "fastlike.estimators.MeanVarEst", {  }),
-    ("polyfit", "fastlike.estimators.PolyFitEst", {  }),
-)
-
-img_type = 'png'
-
-defined_detectors = ['IC', 'JUNO', 'SK', 'LVD', 'SNOP']
+import json
 
 parser = ArgumentParser(description="Construct config csv for a fast-likelihood trial")
 parser.add_argument('config_file_out', type=Path)
-parser.add_argument('detectors', nargs='+', choices=defined_detectors)
+parser.add_argument('meta_params', type=FileType("r"))
 args = parser.parse_args()
 
-dets = args.detectors
+with args.meta_params as params_file:
+    params = json.load(params_file)
+
+likelihood_methods = params['likelihood_methods']
+bin_widths = params['bin_widths']
+mesh_spacings = params['mesh_spacings']
+estimator_methods =  params['estimator_methods']
+dets = params['detectors']
 
 output_dir = Path("$OUT_DIR")
+img_type = "$SAVE_IMG_TYPE"
 
 img_outdir = output_dir / 'imgs'
 json_outdir = output_dir / 'jsons'
@@ -209,6 +194,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                         in_ests_field = est_methods_field,
                         in_true_t1_field = true_t1_field,
                         in_true_t2_field = true_t2_field,
+                        max_plots = "$MAX_PLOTS",
                         filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{{1}}-{{2}}.{img_type}"), 
                     )
 

@@ -86,21 +86,24 @@ fd2210:
 # Fast Likelihood stuff
 FL_DAT_ROOT = snewpdag/data/fastlike
 FL_CONF_ROOT = $(FL_DAT_ROOT)/configs
-FL_CONF_DEPS = $(FL_DAT_ROOT)/compare.py $(FL_DAT_ROOT)/writeconfig.py
+FL_PARAM_ROOT = $(FL_DAT_ROOT)/metaparams
+FL_MAKE_CONF_SCRIPT = $(FL_DAT_ROOT)/compare.py
+FL_CONF_DEPS = $(FL_MAKE_CONF_SCRIPT) $(FL_DAT_ROOT)/writeconfig.py
+ALL_PARAMS = $(wildcard $(FL_PARAM_ROOT)/*.json)
+ALL_CONFS = $(patsubst $(FL_PARAM_ROOT)/%.json,$(FL_CONF_ROOT)/%.csv,$(ALL_PARAMS))
 
-$(FL_CONF_ROOT)/allpairs.csv: $(FL_CONF_DEPS)
-	python $< $@ IC JUNO SK LVD SNOP
-$(FL_CONF_ROOT)/quick.csv: $(FL_CONF_DEPS)
-	python $< $@ LVD SNOP
+$(FL_CONF_ROOT)/%.csv: $(FL_PARAM_ROOT)/%.json $(FL_CONF_DEPS)
+	python $(FL_MAKE_CONF_SCRIPT) $@ $<
 
-N_TRIALS = 2
-fastlikeconfig: $(FL_CONF_ROOT)/allpairs.csv $(FL_CONF_ROOT)/quick.csv
+fastlikeconfig: $(ALL_CONFS)
+
+export N_TRIALS = 2
 testfastlike: $(FL_CONF_ROOT)/quick.csv
-	snewpdag/data/fastlike/runtest.sh $< ./output $(N_TRIALS)
+	snewpdag/data/fastlike/runtest.sh $< ./output
 
-empty_excluding = find $1 ! -wholename '$1' \( ! -type d -o -empty \)  $(foreach exclude,$2,! -path '$(exclude)') -delete
+empty_excluding = find $1 ! -wholename '$1' \( ! -type d -o -empty \)  $(foreach exclude,$1/$2,! -path '$(exclude)') -delete
 cleanout:
-	$(call empty_excluding,output,output/README.md)
+	$(call empty_excluding,output,README.md)
 
 snews_pt_subscribe:
 	snews_pt subscribe --no-firedrill -p '-m snewpdag snewpdag/data/fd2210.csv --input'
@@ -111,4 +114,4 @@ snews_pt_publish:
 init:
 	pip install -r requirements.txt
 
-.PHONY: init run test histogram trial trial2 runtest testfastlike fastlikeconfig cleanout
+.PHONY: init run test histogram trial trial2 runtest fastlikeconfig testfastlike cleanout

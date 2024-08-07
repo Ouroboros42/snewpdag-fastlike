@@ -7,14 +7,14 @@ cd ${PROJECT_ROOT:=$(realpath .)} # Set from condor for correct working dir
 RUN_CONFIG=$1 # CSV File to setup DAG
 OUT_ROOT=$2 # Directory to put outputs in
 
-#Optional args
-N_TRIALS=${3:-100} # Number of trials to run
-LABEL=${4:-"T@$NOW"} # Subdir of 
+: ${N_TRIALS:=100} # Number of trials to run
 
 # Define output directory based on config file name + timestamp
 CONF_BASE=$(basename $RUN_CONFIG)
 CONF_NAME=${CONF_BASE%.*}
-export OUT_DIR=$OUT_ROOT/$CONF_NAME/$LABEL
+OUT_SUBDIR=${LABEL:-"$CONF_NAME/T@$NOW"}
+
+export OUT_DIR=$OUT_ROOT/$OUT_SUBDIR
 
 echo "Building DAG from: $RUN_CONFIG"
 echo "Output in: $OUT_DIR"

@@ -12,7 +12,8 @@ class PairTrialPlot(Node):
         filename,
         in_lag_mesh_field, in_like_mesh_field, in_ests_field,
         in_true_t1_field = None, in_true_t2_field = None,
-        title="Lag Estimator",
+        max_plots = None,
+        title = "Lag Estimator",
         colours = [ "coral", "slateblue", "fuchsia", "turquoise", "goldenrod" ],
         sig_fig = 5,
     **kwargs):
@@ -25,10 +26,14 @@ class PairTrialPlot(Node):
         self.title=title
         self.colours=colours
         self.sig_fig=sig_fig
+        self.max_plots = max_plots
         self.count=0
         super().__init__(**kwargs)
     
     def alert(self, data):
+        if self.max_plots is not None and self.count >= self.max_plots:
+            return True
+
         lag_mesh, lag_mesh_valid = fetch_field(data, self.in_lag_mesh_field)
         if not lag_mesh_valid:
             return False
