@@ -16,7 +16,7 @@ class PairTrialPlot(Node):
         max_plots = None,
         title = "Lag Estimator",
         ncolours = 10,
-        colourmap = 'twilight',
+        colourmap = 'gnuplot',
         sig_fig = 5,
     **kwargs):
         self.in_ests_field = in_ests_field

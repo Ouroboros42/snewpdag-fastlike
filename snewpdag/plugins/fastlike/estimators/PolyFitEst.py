@@ -11,6 +11,7 @@ from numpy.polynomial import Polynomial
 import scipy.optimize as opt
 
 from .EstimatorBase import EstimatorBase
+from .poly_util import valid_real_roots
 
 class PolyFitEst(EstimatorBase):
     def __init__(self, poly_degree=10, **kwargs):
@@ -26,14 +27,9 @@ class PolyFitEst(EstimatorBase):
         pfit = Polynomial.fit(lag_mesh, like_mesh, deg=self.poly_degree)
         pderiv = pfit.deriv()
         
-        extrema = pderiv.roots()
-        real_extrema = np.real(extrema[np.isreal(extrema)])
-        valid_extrema = real_extrema[self.poly_domain_check(real_extrema, pfit)]
-        
-        extrema_likelihoods = pfit(valid_extrema)
-
-        peak_index = np.argmax(extrema_likelihoods)
-        peak_time = valid_extrema[peak_index]
+        extrema = valid_real_roots(pderiv)
+        peak_index = np.argmax(pfit(extrema))
+        peak_time = extrema[peak_index]
         second_deriv = pderiv.deriv()
         fisher_info = -second_deriv(peak_time)
         if fisher_info < 0:

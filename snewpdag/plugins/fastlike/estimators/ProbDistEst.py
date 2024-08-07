@@ -49,7 +49,7 @@ class ProbDistEst(Node):
 
         return store_dict_field(data, self.out_field, 
             dt = peak_lag,
-            dt_err = tuple(np.sqrt(var)),
+            dt_err = self.var_to_stdev(var),
             var = var
         )
 

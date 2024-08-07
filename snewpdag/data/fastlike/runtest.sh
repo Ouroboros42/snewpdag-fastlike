@@ -18,7 +18,7 @@ RUN_PARAMS=${3:-"snewpdag/data/fastlike/metaparams/$CONF_NAME.json"}
 
 export OUT_DIR=$OUT_ROOT/$OUT_SUBDIR
 
-mkdir $OUT_DIR
+mkdir -p $OUT_DIR
 cp $RUN_PARAMS $OUT_DIR/params.json
 
 echo Building DAG from: $(realpath $RUN_CONFIG)

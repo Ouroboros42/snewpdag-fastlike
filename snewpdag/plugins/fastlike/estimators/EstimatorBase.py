@@ -25,7 +25,15 @@ class EstimatorBase(Node, metaclass=ABCMeta):
     @staticmethod
     def is_sorted(arr: np.ndarray):
         return np.all(arr[:-1] <= arr[1:])
+
+    @staticmethod
+    def var_to_stdev(var):
+        return tuple(np.sqrt(var))
     
+    @staticmethod
+    def stdev_to_var(stdev):
+        return tuple(np.square(stdev))
+
     def alert(self, data):
         lags, is_lags_valid = fetch_field(data, self.in_lags_field)
         if not is_lags_valid:
