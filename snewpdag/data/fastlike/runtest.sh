@@ -14,7 +14,12 @@ CONF_BASE=$(basename $RUN_CONFIG)
 CONF_NAME=${CONF_BASE%.*}
 OUT_SUBDIR=${LABEL:-"$CONF_NAME/T@$NOW"}
 
+RUN_PARAMS=${3:-"snewpdag/data/fastlike/metaparams/$CONF_NAME.json"}  
+
 export OUT_DIR=$OUT_ROOT/$OUT_SUBDIR
+
+mkdir $OUT_DIR
+cp $RUN_PARAMS $OUT_DIR/params.json
 
 echo Building DAG from: $(realpath $RUN_CONFIG)
 echo Output in: $(realpath $OUT_DIR)
