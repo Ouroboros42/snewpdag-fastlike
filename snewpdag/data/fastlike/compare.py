@@ -195,6 +195,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                         in_true_t1_field = true_t1_field,
                         in_true_t2_field = true_t2_field,
                         max_plots = "$MAX_PLOTS",
+                        ncolours = len(estimator_methods),
                         filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{{1}}-{{2}}.{img_type}"), 
                     )
 

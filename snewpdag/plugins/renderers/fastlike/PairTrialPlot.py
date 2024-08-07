@@ -1,5 +1,6 @@
 import logging
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 import numpy as np
 
 from .FileFigure import FileFigure
@@ -14,7 +15,8 @@ class PairTrialPlot(Node):
         in_true_t1_field = None, in_true_t2_field = None,
         max_plots = None,
         title = "Lag Estimator",
-        colours = [ "coral", "slateblue", "fuchsia", "turquoise", "goldenrod" ],
+        ncolours = 10,
+        colourmap = 'twilight',
         sig_fig = 5,
     **kwargs):
         self.in_ests_field = in_ests_field
@@ -24,7 +26,7 @@ class PairTrialPlot(Node):
         self.in_true_t2_field = in_true_t2_field
         self.filename = filename
         self.title=title
-        self.colours=colours
+        self.colours=getattr(cm, colourmap)(np.linspace(0, 1, ncolours))
         self.sig_fig=sig_fig
         self.max_plots = max_plots
         self.count=0
