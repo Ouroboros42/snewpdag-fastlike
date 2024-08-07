@@ -20,6 +20,7 @@ export OUT_DIR=$OUT_ROOT/$OUT_SUBDIR
 
 mkdir -p $OUT_DIR
 cp $RUN_PARAMS $OUT_DIR/params.json
+# Allows rerunning/rereporting trials with same configs
 
 echo Building DAG from: $(realpath $RUN_CONFIG)
 echo Output in: $(realpath $OUT_DIR)
