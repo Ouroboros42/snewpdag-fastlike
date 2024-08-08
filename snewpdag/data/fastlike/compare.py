@@ -94,8 +94,9 @@ with LineWriter.from_path(args.config_file_out) as w:
         true_t1_field = ('truth', 'dets', det1, 'true_t')
         true_t2_field = ('truth', 'dets', det2, 'true_t')
 
+        binnings_field = (*pair_field, 'binnings')
         for bin_width in bin_widths:
-            binning_field = (*pair_field, 'binnings')
+            binning_field = (*binnings_field, bin_width)
             binning_name_suffix = f"{bin_width}s-bin_{pairkey}"
 
             w.module(binning_name_suffix, "fastlike.SeriesBinning", 
@@ -210,5 +211,8 @@ with LineWriter.from_path(args.config_file_out) as w:
 
     w.newline(2)
     w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"), suppress_unjsonable=True)
-    w.module("PullInfo", "renderers.JsonOutput", on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("PullInfo", "renderers.JsonOutput",
+        on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"),
+        suppress_unjsonable=True, json_kwargs={ "indent": 2 }
+    )
     w.module("PullPickle", "renderers.PickleOutput", on=['report'], filename=q(output_dir / "jar" / "{}-{}-{}.pkl"))
