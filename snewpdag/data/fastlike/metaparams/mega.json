@@ -3,12 +3,10 @@
 
     "bin_widths" : [ 0.002, 0.005, 0.01, 0.02 ],
 
-    "mesh_spacings" : [ 0.001, 0.002, 0.005 ],
+    "mesh_spacings" : [ 0.001, 0.002 ],
     
     "likelihood_methods" : [
         [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ],
-        [ "roughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1 } ],
-        [ "veryroughsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 10 } ],
         [ "approxlike", "fastlike.likelihoods.ApproxLikelihood", {} ],
         [ "xcov", "fastlike.likelihoods.CrossCovariance", {} ],
         [ "chisquare", "fastlike.likelihoods.ChiSquared", {} ],
@@ -18,8 +16,6 @@
     "estimator_methods" : [
         [ "rawmax", "fastlike.estimators.RawMaxEst",  {} ],
         [ "cumprob", "fastlike.estimators.CumProbEst", {} ],
-        [ "meanvar", "fastlike.estimators.MeanVarEst", {} ],
-        [ "polyfit4", "fastlike.estimators.PolyFitEst", { "poly_degree": 4 } ],
         [ "polyfit7", "fastlike.estimators.PolyFitEst", { "poly_degree": 7 } ],
         [ "polyfit10", "fastlike.estimators.PolyFitEst", { "poly_degree": 10 } ],
         [ "polycum10", "fastlike.estimators.PolyCumEst", { "poly_degree": 10 } ]

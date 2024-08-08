@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 class FileFigure:
-    def __init__(self, filename, dpi=500):
+    def __init__(self, filename, dpi=200):
         self.filename = filename
         self.dpi=dpi
 
