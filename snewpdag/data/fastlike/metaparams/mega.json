@@ -3,21 +3,19 @@
 
     "bin_widths" : [ 0.002, 0.005, 0.01, 0.02 ],
 
-    "mesh_spacings" : [ 0.001, 0.002 ],
+    "mesh_spacings" : [ 0.001, 0.002, 0.005 ],
     
     "likelihood_methods" : [
         [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ],
         [ "approxlike", "fastlike.likelihoods.ApproxLikelihood", {} ],
         [ "xcov", "fastlike.likelihoods.CrossCovariance", {} ],
-        [ "chisquare", "fastlike.likelihoods.ChiSquared", {} ],
-        [ "uniformchisquare", "fastlike.likelihoods.ChiSquared", { "uniform_var": true } ]
+        [ "uchisquare", "fastlike.likelihoods.ChiSquared", { "uniform_var": true } ]
     ],
 
     "estimator_methods" : [
         [ "rawmax", "fastlike.estimators.RawMaxEst",  {} ],
         [ "cumprob", "fastlike.estimators.CumProbEst", {} ],
-        [ "polyfit7", "fastlike.estimators.PolyFitEst", { "poly_degree": 7 } ],
         [ "polyfit10", "fastlike.estimators.PolyFitEst", { "poly_degree": 10 } ],
-        [ "polycum10", "fastlike.estimators.PolyCumEst", { "poly_degree": 10 } ]
+        [ "polycum15", "fastlike.estimators.PolyCumEst", { "poly_degree": 15 } ]
     ]
 }

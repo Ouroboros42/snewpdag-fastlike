@@ -11,10 +11,15 @@ args = parser.parse_args()
 with args.meta_params as params_file:
     params = json.load(params_file)
 
-likelihood_methods = params['likelihood_methods']
 bin_widths = params['bin_widths']
 mesh_spacings = params['mesh_spacings']
+likelihood_methods = params['likelihood_methods']
 estimator_methods =  params['estimator_methods']
+def param_names(param_list):
+    return list(p[0] for p in param_list)
+like_method_names = param_names(likelihood_methods)
+est_method_names = param_names(estimator_methods)
+
 dets = params['detectors']
 
 output_dir = Path("$OUT_DIR")
@@ -34,7 +39,7 @@ def cartesian_product(a: list, b: list, asymmetric: bool = False):
 det_pairs = cartesian_product(dets, dets, True)
 
 with LineWriter.from_path(args.config_file_out) as w:
-    w.module("Control", "Pass", line=1)
+    w.module("Control", "Pass", line=1, report_dump=False)
     w.newline()
     w.comment("Accelerated Likelihood Calculation with background")
     w.newline()
@@ -88,15 +93,16 @@ with LineWriter.from_path(args.config_file_out) as w:
     for det1, det2 in det_pairs:
         w.newline()
 
-        pairkey = f"{det1}-{det2}"
-        pair_field = ('det_pairs', pairkey)
-
         true_t1_field = ('truth', 'dets', det1, 'true_t')
         true_t2_field = ('truth', 'dets', det2, 'true_t')
+
+        pairkey = f"{det1}-{det2}"
+        pair_field = ('det_pairs', pairkey)
 
         summaries_field = (*pair_field, 'summary')
         pull_summary_field = (*summaries_field, 'pull_scores')
         err_summary_field = (*summaries_field, 'raw_errors')
+
         w.module(f"Summaries-{pairkey}", "Write",
             on=['report'],
             write=tuple_pairs({ pull_summary_field: (), err_summary_field: () })
@@ -142,14 +148,12 @@ with LineWriter.from_path(args.config_file_out) as w:
 
                     est_methods_field = (*like_method_field, 'estimators')
 
-                    like_method_img_outdir = img_outdir / pairkey / like_method_name / f"bw-{bin_width}s" / f"mesh-{mesh_spacing}s"
+                    like_method_img_outdir = img_outdir / pairkey / 'methods' / like_method_name / f"bw-{bin_width}s" / f"mesh-{mesh_spacing}s"
 
                     for est_method_name, est_plugin_class, est_kwargs in estimator_methods:
                         est_method_field = (*est_methods_field, est_method_name)
                         est_method_name_suffix = f"{est_method_name}_{like_method_name_suffix}"
 
-                        out_stats_field = (*pair_field, 'method_summaries', like_method_name, est_method_name, bin_width, mesh_spacing)
-                        
                         def pull_img_pattern(pullname):
                             return q(like_method_img_outdir / "report" / f"{est_method_name}-{pullname}-{{1}}-{{2}}.{img_type}")
                         
@@ -233,4 +237,57 @@ with LineWriter.from_path(args.config_file_out) as w:
     w.module("PullPickle", "renderers.PickleOutput", on=['report'], filename=q(output_dir / "jar" / "{}-{}-{}.pkl"))
 
     w.module("SummaryReportFilter", "FilterValue", in_field="'action'", value="'report'")
-    w.module("SummaryPlots", "Pass", line=1)
+    w.module("SummaryPlots", "Pass", line=1, report_dump=False)
+
+    for det1, det2 in det_pairs:
+        w.newline()
+
+        pairkey = f"{det1}-{det2}"
+        pair_field = ('det_pairs', pairkey)
+
+        summaries_field = (*pair_field, 'summary')
+        pull_summary_field = (*summaries_field, 'pull_scores')
+        err_summary_field = (*summaries_field, 'raw_errors')
+
+        def summary_plot_filename(plotname):
+            return q(img_outdir / pairkey / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
+
+        w.module(f"CompAccuracy-{pairkey}", "renderers.fastlike.CompPlot",
+            title=f"'{pairkey} RMS Error'", stat = "'rms_err'",
+            filename = summary_plot_filename("Raw-Accuracy"),
+            in_summary_field = err_summary_field,
+            like_methods = like_method_names,
+            est_methods = est_method_names,
+            bin_widths = bin_widths,
+            mesh_spacings = mesh_spacings
+        )
+
+        w.module(f"CompRawBias-{pairkey}", "renderers.fastlike.CompPlot",
+            title=f"'{pairkey} Error Mean'", stat = "'mean'", plot_abs=True,
+            filename = summary_plot_filename("Raw-Bias"),
+            in_summary_field = err_summary_field,
+            like_methods = like_method_names,
+            est_methods = est_method_names,
+            bin_widths = bin_widths,
+            mesh_spacings = mesh_spacings
+        )
+
+        w.module(f"CompUncertainty-{pairkey}", "renderers.fastlike.CompPlot",
+            title=f"'{pairkey} Pull-Score Standard Deviation'", stat = "'stdev'",
+            filename = summary_plot_filename("Uncertainty-Accuracy"),
+            in_summary_field = pull_summary_field,
+            like_methods = like_method_names,
+            est_methods = est_method_names,
+            bin_widths = bin_widths,
+            mesh_spacings = mesh_spacings
+        )
+
+        w.module(f"CompBias-{pairkey}", "renderers.fastlike.CompPlot",
+            title=f"'{pairkey} Pull-Score Mean'", stat = "'mean'", plot_abs=True,
+            filename = summary_plot_filename("Pull-Bias"),
+            in_summary_field = pull_summary_field,
+            like_methods = like_method_names,
+            est_methods = est_method_names,
+            bin_widths = bin_widths,
+            mesh_spacings = mesh_spacings
+        )
