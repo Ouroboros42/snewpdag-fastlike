@@ -16,6 +16,7 @@ class Pass(Node):
   def __init__(self, **kwargs):
     self.line = kwargs.pop('line', 100)
     self.dump = kwargs.pop('dump', 0)
+    self.report_dump = kwargs.pop('report_dump', True)
     self.count = 0
     super().__init__(**kwargs)
 
@@ -49,10 +50,13 @@ class Pass(Node):
     return True
 
   def report(self, data):
-    logging.debug('{}: report'.format(self.name))
-    print('>>>> {0} >>>> ({1}) report'.format(self.name, self.count))
-    self.print_dict('', data)
-    print('<<<< {} <<<<'.format(self.name))
+    if self.report_dump:
+      logging.debug('{}: report'.format(self.name))
+      print('>>>> {0} >>>> ({1}) report'.format(self.name, self.count))
+      self.print_dict('', data)
+      print('<<<< {} <<<<'.format(self.name))
+    else:
+      print('{0}: received report'.format(self.name))
     return True
 
   def reset(self, data):
