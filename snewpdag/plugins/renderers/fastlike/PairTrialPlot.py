@@ -25,15 +25,15 @@ class PairTrialPlot(Node):
         self.in_true_t1_field = in_true_t1_field
         self.in_true_t2_field = in_true_t2_field
         self.filename = filename
-        self.title=title
-        self.colours=getattr(cm, colourmap)(np.linspace(0, 1, ncolours))
-        self.sig_fig=sig_fig
+        self.title = title
+        self.colours = getattr(cm, colourmap)(np.linspace(0, 1, ncolours))
+        self.sig_fig = sig_fig
         self.max_plots = max_plots
-        self.count=0
+        self.plot_count = 0 # Incremented by FileFigure
         super().__init__(**kwargs)
     
     def alert(self, data):
-        if self.max_plots is not None and self.count >= self.max_plots:
+        if self.max_plots is not None and self.plot_count >= self.max_plots:
             return True
 
         lag_mesh, lag_mesh_valid = fetch_field(data, self.in_lag_mesh_field)
@@ -53,10 +53,7 @@ class PairTrialPlot(Node):
         if has_true_dt:
             true_dt = true_t1 - true_t2
 
-        filename = fill_filename(self.filename, self.name, self.count, data)
-        self.count += 1
-
-        with FileFigure(filename) as fig:
+        with FileFigure.for_node(self, data) as fig:
             ax = fig.subplots()
             ax.set_title(self.title)
             ax.scatter(lag_mesh, like_mesh)

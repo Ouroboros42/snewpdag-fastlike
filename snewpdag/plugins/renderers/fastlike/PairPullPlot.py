@@ -19,7 +19,6 @@ class PairPullPlot(Node):
         self.stats_summary_labels = stats_summary_labels
         self.filename = filename
         self.title=title
-        self.count=0
         super().__init__(**kwargs)
 
     def valid_hist_value(self, x):
@@ -53,10 +52,7 @@ class PairPullPlot(Node):
 
         fit = norm(mean.astype(np.float64), std.astype(np.float64))
 
-        filename = fill_filename(self.filename, self.name, self.count, data)
-        self.count += 1
-
-        with FileFigure(filename) as fig:
+        with FileFigure.for_node(self, data) as fig:
             ax = fig.subplots()
             ax.set_title(self.title)
             counts, bins, _ = ax.hist(scores[self.valid_hist_value(scores)], density=True, label="Pull Scores")    
