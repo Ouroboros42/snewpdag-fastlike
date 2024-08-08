@@ -14,6 +14,8 @@ import logging
 from snewpdag.dag import Node
 from snewpdag.dag.lib import fetch_field, store_field
 
+from sys import float_info
+
 class LagPull(Node):
   def __init__(self, out_field, in_obs_field, in_true_field, in_err_field = None,
                in_base_field = None, out_diff_field = None, on = ['alert'], **kwargs):
@@ -55,7 +57,7 @@ class LagPull(Node):
     else:
       conf = err
 
-    score = dx / abs(conf)
+    score = dx / max(abs(conf), float_info.epsilon)
 
     store_field(data, self.out_field, score)
     

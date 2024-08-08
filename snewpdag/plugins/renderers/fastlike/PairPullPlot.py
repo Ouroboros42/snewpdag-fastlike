@@ -17,14 +17,26 @@ class PairPullPlot(Node):
         self.title=title
         self.count=0
         super().__init__(**kwargs)
+
+    def valid_hist_value(self, x):
+        mask = np.abs(x) <= 1e15
+        n_rejected = np.count_nonzero(np.logical_not(mask))
+        if n_rejected:
+            logging.warning(f"Not displaying {n_rejected} extremely large pull scores in {self.name}")
+        return mask
     
     def report(self, data):
         pullinfo, has_info = fetch_field(data, self.in_pull_field)
         if not has_info:
             return False
 
-        scores = npma.masked_invalid(pullinfo['series'])
-            
+        raw_scores = pullinfo['series']
+
+        scores = raw_scores[np.isfinite(raw_scores)]
+        n_dropped_scores = len(raw_scores) - len(scores)
+        if n_dropped_scores:
+            logging.warning(f"{n_dropped_scores} infinite pull scores rejected in {self.name}")
+
         mean = np.mean(scores)
         std = np.std(scores)
         rms_err = np.sqrt(mean ** 2 + std ** 2)
@@ -40,12 +52,18 @@ class PairPullPlot(Node):
         with FileFigure(filename) as fig:
             ax = fig.subplots()
             ax.set_title(self.title)
-            counts, bins, _ = ax.hist(scores, density=True, label="Pull Scores")
+            counts, bins, _ = ax.hist(scores[self.valid_hist_value(scores)], density=True, label="Pull Scores")    
             plot_x = np.linspace(np.min(bins), np.max(bins), len(bins) * 10, dtype=np.float64)
-            fit_y = fit.pdf(plot_x)
-            ax.plot(plot_x, fit_y, label=f"Normal fit, mean={mean:.4f}, std={std:.4f}")
+
+            if len(scores) > 1:
+                fit = norm(mean.astype(np.float64), std.astype(np.float64))
+                fit_y = fit.pdf(plot_x)
+                ax.plot(plot_x, fit_y, label=f"Normal fit, mean={mean:.4f}, std={std:.4f}")
+            else:
+                logging.warning(f"Not enough finite pull scores to calculate stddev for {self.name}")
+
             ax.set_xlabel("Score")
             ax.set_ylabel("Frequency")
             ax.legend()
-
+                
         return True
