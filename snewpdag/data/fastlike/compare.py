@@ -94,6 +94,14 @@ with LineWriter.from_path(args.config_file_out) as w:
         true_t1_field = ('truth', 'dets', det1, 'true_t')
         true_t2_field = ('truth', 'dets', det2, 'true_t')
 
+        summaries_field = (*pair_field, 'summary')
+        pull_summary_field = (*summaries_field, 'pull_scores')
+        err_summary_field = (*summaries_field, 'raw_errors')
+        w.module(f"Summaries-{pairkey}", "Write",
+            on=['report'],
+            write=tuple_pairs({ pull_summary_field: (), err_summary_field: () })
+        )
+        
         binnings_field = (*pair_field, 'binnings')
         for bin_width in bin_widths:
             binning_field = (*binnings_field, bin_width)
@@ -144,6 +152,13 @@ with LineWriter.from_path(args.config_file_out) as w:
                         
                         def pull_img_pattern(pullname):
                             return q(like_method_img_outdir / "report" / f"{est_method_name}-{pullname}-{{1}}-{{2}}.{img_type}")
+                        
+                        stats_summary_labels = {
+                            "bin_width": bin_width,
+                            "mesh_spacing": mesh_spacing,
+                            "like_method_name": like_method_name,
+                            "est_method_name": est_method_name
+                        }
 
                         w.newline()
                         w.module(f"lag_{est_method_name_suffix}", est_plugin_class,
@@ -171,7 +186,8 @@ with LineWriter.from_path(args.config_file_out) as w:
 
                         w.module(f"pull-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
                             in_pull_field = (*est_method_field, 'pull_scores'),
-                            out_stats_field = (*out_stats_field, 'pull_score'),
+                            stats_summary_array_field = pull_summary_field,
+                            stats_summary_labels = stats_summary_labels,
                             filename = pull_img_pattern("pull-scores"), 
                         )
 
@@ -185,7 +201,8 @@ with LineWriter.from_path(args.config_file_out) as w:
                         w.module(f"err-plot_{est_method_name_suffix}", "renderers.fastlike.PairPullPlot",
                             title="'Error Distribution'",
                             in_pull_field = (*est_method_field, 'raw_errors'),
-                            out_stats_field = (*out_stats_field, 'raw_error'),
+                            stats_summary_array_field = err_summary_field,
+                            stats_summary_labels = stats_summary_labels,
                             filename = pull_img_pattern("errors"),
                         )
 
@@ -205,8 +222,6 @@ with LineWriter.from_path(args.config_file_out) as w:
                 in_stats_field = (*pair_field, 'method_summaries', like_method_name, est_method_name)
                 pair_method_name_suffix = f"{est_method_name}_{like_method_name}_{pairkey}"
 
-                # w.module(f"score-compare_{pair_method_name_suffix}", )
-
     save_fields = ['coincident_detectors', 'truth', 'det_pairs']
 
     w.newline(2)
@@ -216,3 +231,6 @@ with LineWriter.from_path(args.config_file_out) as w:
         suppress_unjsonable=True, json_kwargs={ "indent": 2 }
     )
     w.module("PullPickle", "renderers.PickleOutput", on=['report'], filename=q(output_dir / "jar" / "{}-{}-{}.pkl"))
+
+    w.module("SummaryReportFilter", "FilterValue", in_field="'action'", value="'report'")
+    w.module("SummaryPlots", "Pass", line=1)

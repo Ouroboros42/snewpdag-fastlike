@@ -7,12 +7,16 @@ from scipy.stats import norm
 from .FileFigure import FileFigure
 
 from snewpdag.dag import Node
-from snewpdag.dag.lib import fill_filename, fetch_field, store_field, store_dict_field
+from snewpdag.dag.lib import fill_filename, fetch_field, store_field, store_dict_field, append_tuple_field
 
 class PairPullPlot(Node):
-    def __init__(self, filename, in_pull_field, out_stats_field = None, title="Pull Distribution", **kwargs):
+    def __init__(self,
+        filename, in_pull_field, title="Pull Distribution",
+        stats_summary_array_field = None, stats_summary_labels = {},
+    **kwargs):
         self.in_pull_field = in_pull_field
-        self.out_stats_field = out_stats_field
+        self.stats_summary_array_field = stats_summary_array_field
+        self.stats_summary_labels = stats_summary_labels
         self.filename = filename
         self.title=title
         self.count=0
@@ -41,8 +45,11 @@ class PairPullPlot(Node):
         std = np.std(scores)
         rms_err = np.sqrt(mean ** 2 + std ** 2)
 
-        if self.out_stats_field is not None:
-            store_dict_field(data, self.out_stats_field, mean=mean, stdev=std, rms_err=rms_err)            
+        if self.stats_summary_array_field is not None:
+            append_tuple_field(data, self.stats_summary_array_field, {
+                **self.stats_summary_labels,
+                "results": { "mean": mean, "stdev": std, "rms_err": rms_err }
+            })            
 
         fit = norm(mean.astype(np.float64), std.astype(np.float64))
 

@@ -45,8 +45,15 @@ class LineWriter:
         for i in range(n):
             self.file.write(',,,,,\n')
 
+def fix_writekey(key):
+    if isinstance(key, (tuple, list)):
+        return "/".join(key)
+    else:
+        return key
+
 def tuple_pairs(*args, **kwargs):
-    pair_seq = ",".join(f"('{k}',{v})" for k, v in chain(*(arg.items() for arg in args), kwargs.items()))
+    pairs = chain(*(arg.items() for arg in args), kwargs.items())
+    pair_seq = ",".join(f"('{fix_writekey(k)}',{v})" for k, v in pairs)
     return f"({pair_seq})"
 
 def q(string_contents: str):

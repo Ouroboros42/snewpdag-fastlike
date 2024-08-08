@@ -11,5 +11,5 @@ PARAM_PATH=${3:-"$OUT_DIR/params.json"}
 DAT=snewpdag/data/fastlike
 TMP_CONF_PATH=$DAT/configs/temp/T@$NOW-conf.csv
 python $DAT/compare.py $TMP_CONF_PATH $PARAM_PATH
-python snewpdag/trials/PicklePayload.py $TMP_CONF_PATH $PICKLE_PATH
+python snewpdag/trials/PicklePayload.py $TMP_CONF_PATH $PICKLE_PATH -i SummaryPlots
 rm $TMP_CONF_PATH

@@ -8,7 +8,7 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fill_filename, fetch_field, store_field, store_dict_field
 
 class MetaPullPlot(Node):
-    def __init__(self, filename, in_field, title="Pull Distribution", **kwargs):
+    def __init__(self, filename, in_fields, title="Pull Summary", **kwargs):
         self.in_field = in_field
         self.filename = filename
         self.title=title
@@ -27,7 +27,6 @@ class MetaPullPlot(Node):
             ax = fig.subplots()
             for bin_width, bininfo in pullinfo.items():
                 
-
                 ax.plot()
 
 

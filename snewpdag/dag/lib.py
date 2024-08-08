@@ -74,6 +74,18 @@ def store_dict_field(data, field, override=False, **out_dict):
     target = out_dict
   return store_field(data, field, target)
 
+def fetch_tuple(data, field):
+  maybe_tuple, is_valid = fetch_field(data, field)
+
+  if is_valid:
+    return maybe_tuple
+  else:
+    return tuple()
+
+def append_tuple_field(data, field, *items):
+  target = fetch_tuple(data, field)
+  return store_field(data, field, target + items)
+
 def fill_filename(pattern, module_name, count, data, create_dir=True):
   """
   Get filename, and fill out the details.
