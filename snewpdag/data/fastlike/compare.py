@@ -253,7 +253,7 @@ with LineWriter.from_path(args.config_file_out) as w:
             return q(img_outdir / pairkey / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
 
         w.module(f"CompAccuracy-{pairkey}", "renderers.fastlike.CompPlot",
-            title=f"'{pairkey} RMS Error'", stat = "'rms_err'",
+            title=f"'{pairkey} RMS Error / s'", stat = "'rms_err'", plot_func="'log'",
             filename = summary_plot_filename("Raw-Accuracy"),
             in_summary_field = err_summary_field,
             like_methods = like_method_names,
@@ -263,7 +263,7 @@ with LineWriter.from_path(args.config_file_out) as w:
         )
 
         w.module(f"CompRawBias-{pairkey}", "renderers.fastlike.CompPlot",
-            title=f"'{pairkey} Error Mean'", stat = "'mean'", plot_abs=True,
+            title=f"'{pairkey} Raw Error Mean / s'", stat = "'mean'", plot_func="'logabs'",
             filename = summary_plot_filename("Raw-Bias"),
             in_summary_field = err_summary_field,
             like_methods = like_method_names,
@@ -273,7 +273,7 @@ with LineWriter.from_path(args.config_file_out) as w:
         )
 
         w.module(f"CompUncertainty-{pairkey}", "renderers.fastlike.CompPlot",
-            title=f"'{pairkey} Pull-Score Standard Deviation'", stat = "'stdev'",
+            title=f"'{pairkey} Pull-Score Standard Deviation'", stat = "'stdev'", plot_func = "'abslog'",
             filename = summary_plot_filename("Uncertainty-Accuracy"),
             in_summary_field = pull_summary_field,
             like_methods = like_method_names,
@@ -283,7 +283,7 @@ with LineWriter.from_path(args.config_file_out) as w:
         )
 
         w.module(f"CompBias-{pairkey}", "renderers.fastlike.CompPlot",
-            title=f"'{pairkey} Pull-Score Mean'", stat = "'mean'", plot_abs=True,
+            title=f"'{pairkey} Pull-Score Mean'", stat = "'mean'", plot_func="'logabs'",
             filename = summary_plot_filename("Pull-Bias"),
             in_summary_field = pull_summary_field,
             like_methods = like_method_names,
