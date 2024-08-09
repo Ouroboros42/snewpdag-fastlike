@@ -31,9 +31,9 @@ class PolyCumEst(EstimatorBase):
         cum_like = pfit.integ(lbnd=np.min(lag_mesh))
         cum_prob = cum_like / cum_like(np.max(lag_mesh))
 
-        median_lag = valid_real_roots(cum_prob - self.EST_CUM_PROB).item()
-        low_bound = valid_real_roots(cum_prob - self.LOW_BOUND_CUM_PROB).item()
-        high_bound = valid_real_roots(cum_prob - self.HIGH_BOUND_CUM_PROB).item()
+        median_lag = np.median(valid_real_roots(cum_prob - self.EST_CUM_PROB))
+        low_bound = np.median(valid_real_roots(cum_prob - self.LOW_BOUND_CUM_PROB))
+        high_bound = np.median(valid_real_roots(cum_prob - self.HIGH_BOUND_CUM_PROB))
 
         dt_err = (median_lag - low_bound, high_bound - median_lag)
 
