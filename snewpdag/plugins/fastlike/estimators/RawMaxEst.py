@@ -15,8 +15,8 @@ class RawMaxEst(EstimatorBase):
 
         conf_range_lags = lags[log_likelihoods > err_drop]
 
-        low_bound = min(lags[peak_i - 1], conf_range_lags[0])
-        high_bound = max(lags[peak_i + 1], conf_range_lags[-1])
+        low_bound = min(lags.take(peak_i - 1, mode='clip'), conf_range_lags[0])
+        high_bound = max(lags.take(peak_i + 1, mode='clip'), conf_range_lags[-1])
 
         dt_err = (peak_lag - low_bound, high_bound - peak_lag)
 
