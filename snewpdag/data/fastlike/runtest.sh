@@ -28,3 +28,5 @@ echo Running $N_TRIALS trials
 
 python snewpdag/trials/Simple.py Control -n $N_TRIALS | \
 python -m snewpdag --log $LOG_LEVEL --jsonlines $RUN_CONFIG
+
+echo !TEST-FINISHED!
