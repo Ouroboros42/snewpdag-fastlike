@@ -254,7 +254,7 @@ with LineWriter.from_path(args.config_file_out) as w:
         pair_img_path = img_outdir / pairkey if len(det_pairs) > 1 else img_outdir
         
         def summary_plot_filename(plotname):
-            return q(pair_img_path / pairkey / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
+            return q(pair_img_path / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
 
         w.module(f"CompAccuracy-{pairkey}", "renderers.fastlike.CompPlot",
             title=f"'{pairkey} RMS Error / s'", stat = "'rms_err'", plot_func="'log'",
