@@ -99,16 +99,18 @@ with LineWriter.from_path(args.config_file_out) as w:
         pairkey = f"{det1}-{det2}"
         pair_field = ('det_pairs', pairkey)
 
+        binnings_field = (*pair_field, 'binnings')
+
         summaries_field = (*pair_field, 'summary')
         pull_summary_field = (*summaries_field, 'pull_scores')
         err_summary_field = (*summaries_field, 'raw_errors')
+        pair_img_path = img_outdir / pairkey if len(det_pairs) > 1 else img_outdir
 
         w.module(f"Summaries-{pairkey}", "Write",
             on=['report'],
             write=tuple_pairs({ pull_summary_field: (), err_summary_field: () })
         )
         
-        binnings_field = (*pair_field, 'binnings')
         for bin_width in bin_widths:
             binning_field = (*binnings_field, bin_width)
             binning_name_suffix = f"{bin_width}s-bin_{pairkey}"
@@ -148,7 +150,7 @@ with LineWriter.from_path(args.config_file_out) as w:
 
                     est_methods_field = (*like_method_field, 'estimators')
 
-                    like_method_img_outdir = img_outdir / pairkey / 'methods' / like_method_name / f"bw-{bin_width}s" / f"mesh-{mesh_spacing}s"
+                    like_method_img_outdir = pair_img_path / 'methods' / like_method_name / f"bw-{bin_width}s" / f"mesh-{mesh_spacing}s"
 
                     for est_method_name, est_plugin_class, est_kwargs in estimator_methods:
                         est_method_field = (*est_methods_field, est_method_name)
@@ -249,8 +251,10 @@ with LineWriter.from_path(args.config_file_out) as w:
         pull_summary_field = (*summaries_field, 'pull_scores')
         err_summary_field = (*summaries_field, 'raw_errors')
 
+        pair_img_path = img_outdir / pairkey if len(det_pairs) > 1 else img_outdir
+        
         def summary_plot_filename(plotname):
-            return q(img_outdir / pairkey / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
+            return q(pair_img_path / pairkey / 'summary' / f'{plotname}-{{1}}-{{2}}.{img_type}')
 
         w.module(f"CompAccuracy-{pairkey}", "renderers.fastlike.CompPlot",
             title=f"'{pairkey} RMS Error / s'", stat = "'rms_err'", plot_func="'log'",
