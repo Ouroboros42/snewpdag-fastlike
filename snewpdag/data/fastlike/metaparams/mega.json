@@ -15,7 +15,6 @@
     "estimator_methods" : [
         [ "rawmax", "fastlike.estimators.RawMaxEst",  {} ],
         [ "cumprob", "fastlike.estimators.CumProbEst", {} ],
-        [ "polyfit10", "fastlike.estimators.PolyFitEst", { "poly_degree": 10 } ],
-        [ "polycum15", "fastlike.estimators.PolyCumEst", { "poly_degree": 15 } ]
+        [ "polyfit10", "fastlike.estimators.PolyFitEst", { "poly_degree": 10 } ]
     ]
 }
