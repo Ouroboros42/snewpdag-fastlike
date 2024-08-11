@@ -111,8 +111,8 @@ class CompPlot(Node):
             }
 
             top_text(fig, "Estimator Method", 0.03, **big_ax_label_kwargs)
-            right_text(fig, "Likelihood Formula", -0.065, **big_ax_label_kwargs)
-            left_text(fig, "Bin Width / s", -0.065, **big_ax_label_kwargs)
+            right_text(fig, "Likelihood Formula", 0.03, **big_ax_label_kwargs)
+            left_text(fig, "Bin Width / s", 0.05, **big_ax_label_kwargs)
             bottom_text(fig, "Mesh Spacing / s", 0.03, **big_ax_label_kwargs)
 
         return True

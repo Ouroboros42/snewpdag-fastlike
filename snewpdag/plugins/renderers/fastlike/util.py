@@ -4,6 +4,8 @@ import numpy as np
 __all__ = [ 'top_text', 'bottom_text', 'left_text', 'right_text', 'image_grid_trans' ]
 
 def image_grid_bbox(fig, grid):
+    """Calculate the bounding box of an ImageGrid - this is not dynamic, so must be run after the grid is finalised."""
+    fig.canvas.draw_idle()
     # Courtesty of https://stackoverflow.com/a/15477723
     all_extents = np.array([a.get_position().extents for a in grid])
     widest_extents = np.empty(4)
