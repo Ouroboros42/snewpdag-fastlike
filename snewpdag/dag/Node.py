@@ -15,7 +15,7 @@ class Node:
   # shared random number generator - initialized by app
   rng = None
 
-  def __init__(self, name, **kwargs):
+  def __init__(self, name, save_last_data = True, **kwargs):
     """
     Initialize the node.
     OVERRIDE this method to initialize more instance data.
@@ -24,7 +24,9 @@ class Node:
     self.name = name     # name of the Node
     self.observers = []  # observers of this Node
     self.watch_list = [] # nodes this Node is observing
-    self.last_data = {}  # data after last update
+    self.save_last_data = save_last_data
+    if self.save_last_data:
+      self.last_data = {}  # data after last update
     self.last_source = None # source of last update
 
   def dispose(self):
@@ -61,9 +63,12 @@ class Node:
     Notify all observers that they need to update.
     Update history by appending name of current node.
     """
-    self.last_data = data.copy() # shallow copy (copies refs of objects)
+    last_data = data.copy() # shallow copy (copies refs of objects)
+    if self.save_last_data:
+      self.last_data = last_data
+
     # record action
-    self.last_data['action'] = action
+    last_data['action'] = action
     # append to history (tuple, so remember that tuples are immutable)
     #if history == None:
     #  if 'history' in data:
@@ -75,14 +80,14 @@ class Node:
     #  h1 = history
 
     if 'history' not in data:
-      self.last_data['history'] = History()
-    self.last_data['history'].append(self.name)
+      last_data['history'] = History()
+    last_data['history'].append(self.name)
     #h2 = (self.name,)
     #self.last_data['history'] = h1 + h2
     # notify all observers
     
     if start_loop:
-      queue = deque((obs, self.last_data) for obs in self.observers)
+      queue = deque((obs, last_data) for obs in self.observers)
       while queue:
         next_node, next_data = queue.popleft()
         result = next_node.update(next_data, False)
@@ -91,7 +96,7 @@ class Node:
           logging.debug(f'DEBUG:{next_node.name}: notify {", ".join(obs.name for obs in next_node.observers)}')
 
     else:
-      return self.last_data
+      return last_data
 
 #
 # entry points
