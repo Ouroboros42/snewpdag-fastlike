@@ -231,7 +231,10 @@ with LineWriter.from_path(args.config_file_out) as w:
     save_fields = ['coincident_detectors', 'truth', 'det_pairs']
 
     w.newline(2)
-    w.module("TrialInfo", "renderers.JsonOutput", on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"), suppress_unjsonable=True)
+    w.module("TrialInfo", "renderers.JsonOutput",
+        on=['alert'], fields=save_fields, filename=q(output_dir / "jsons" / "trials" / "{}-{}-{}.json"),
+        suppress_unjsonable=True, json_kwargs={ "indent": 2 }
+    )
     w.module("PullInfo", "renderers.JsonOutput",
         on=['report'], fields=save_fields, filename=q(output_dir / "jsons" / "report-{}-{}-{}.json"),
         suppress_unjsonable=True, json_kwargs={ "indent": 2 }
@@ -265,9 +268,20 @@ with LineWriter.from_path(args.config_file_out) as w:
             bin_widths = bin_widths,
             mesh_spacings = mesh_spacings
         )
+        
+        w.module(f"CompVariance-{pairkey}", "renderers.fastlike.CompPlot",
+            title=f"'{pairkey} Stddev Error / s'", stat = "'stdev'", plot_func="'log'",
+            filename = summary_plot_filename("Raw-Variance"),
+            in_summary_field = err_summary_field,
+            like_methods = like_method_names,
+            est_methods = est_method_names,
+            bin_widths = bin_widths,
+            mesh_spacings = mesh_spacings
+        )
+
 
         w.module(f"CompRawBias-{pairkey}", "renderers.fastlike.CompPlot",
-            title=f"'{pairkey} Raw Error Mean / s'", stat = "'mean'", plot_func="'logabs'",
+            title=f"'{pairkey} Raw Error Mean (Bias) / s'", stat = "'mean'", plot_func="'logabs'",
             filename = summary_plot_filename("Raw-Bias"),
             in_summary_field = err_summary_field,
             like_methods = like_method_names,
