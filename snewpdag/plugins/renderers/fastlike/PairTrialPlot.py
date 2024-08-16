@@ -79,7 +79,7 @@ class PairTrialPlot(Node):
             if has_true_dt:
                 ax.axvline(x=true_dt, color='green', label=f"True dt = ${true_dt:.{self.sig_fig}g}$")
 
-            ax.legend()
+            ax.legend(bbox_to_anchor=(1.04, 1), loc = 'upper left')
             ax.set_xlabel("Lag / s")
             ax.set_ylabel("Likelihood")
 

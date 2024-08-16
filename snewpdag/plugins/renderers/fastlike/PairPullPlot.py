@@ -65,8 +65,8 @@ class PairPullPlot(Node):
             else:
                 logging.warning(f"Not enough finite pull scores to calculate stddev for {self.name}")
 
+            ax.legend(bbox_to_anchor=(1.04, 1), loc = 'upper left')
             ax.set_xlabel("Score")
             ax.set_ylabel("Frequency")
-            ax.legend()
                 
         return True
