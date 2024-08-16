@@ -10,7 +10,6 @@ from sys import float_info
 from .EstimatorBase import EstimatorBase
 
 class CumProbEst(EstimatorBase):
-    ONESIDE_CONFIDENCE_RANGE = 0.341344746069
     CLOSE_ENOUGH_ZERO = float_info.epsilon
     CLOSE_ENOUGH_ONE = 1 - float_info.epsilon
 

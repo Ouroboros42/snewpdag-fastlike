@@ -15,11 +15,6 @@ from .EstimatorBase import EstimatorBase
 from .poly_util import valid_real_roots
 
 class PolyCumEst(EstimatorBase):
-    ONESIDE_CONFIDENCE_RANGE = 0.341344746069
-    EST_CUM_PROB = 0.5
-    LOW_BOUND_CUM_PROB = EST_CUM_PROB - ONESIDE_CONFIDENCE_RANGE
-    HIGH_BOUND_CUM_PROB = EST_CUM_PROB + ONESIDE_CONFIDENCE_RANGE
-
     def __init__(self, poly_degree=10, **kwargs):
         self.poly_degree = poly_degree
         super().__init__(**kwargs)

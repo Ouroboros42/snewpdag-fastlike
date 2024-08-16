@@ -18,11 +18,6 @@ class PolyFitEst(EstimatorBase):
         self.poly_degree = poly_degree
         super().__init__(**kwargs)
 
-    @staticmethod
-    def poly_domain_check(x: ArrayLike, poly: Polynomial):
-        lo, hi = poly.domain
-        return (lo <= x) & (x <= hi)
-
     def estimate_lag(self, lag_mesh: np.ndarray[float], like_mesh: np.ndarray[float]) -> dict:
         pfit = Polynomial.fit(lag_mesh, like_mesh, deg=self.poly_degree)
         pderiv = pfit.deriv()
@@ -39,5 +34,6 @@ class PolyFitEst(EstimatorBase):
 
         return {
             'dt': peak_time,
-            'var': var
+            'var': var,
+            'like_fit': pfit
         }
