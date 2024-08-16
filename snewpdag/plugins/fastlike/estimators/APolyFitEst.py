@@ -15,35 +15,43 @@ from .poly_util import valid_real_roots
 
 from itertools import islice
 
-def take_alternate(iterable, take_odd: bool):
-    """Take every other element of iterable, starting at index 1 if take_odd is True"""
-    return islice(iterable, int(take_odd), None, 2)
+def iter_pairs(iterable):
+    pair_ready = False
+    for item in iterable:
+        if pair_ready:
+            yield np.array((last, item))
+        else:
+            last = item
 
-def polynomial(x: float, lowest_exponent: int, coefficients_ascending):
-    return sum(c * (x ** (n + lowest_exponent)) for n, c in enumerate(coefficients_ascending))
+        pair_ready = not pair_ready
 
-def polynomialderiv(x: float, lowest_exponent: int, coefficients_ascending):
-    return polynomial(x, lowest_exponent - 1, ((n + lowest_exponent) * c for n, c in enumerate(coefficients_ascending)))
+def signed_diff(x: ArrayLike, center: ArrayLike):    
+    diff = x - center
+    return (diff > 0).astype(int), np.abs(diff)
 
-@np.vectorize
-def apoly(x: float, peak_x: float, peak_y: float, *arms_interleaved: float):
-    diff = x - peak_x
-    return peak_y + polynomial(abs(diff), 2, take_alternate(arms_interleaved, diff > 0))
+def apoly(x: ArrayLike, peak_x: float, peak_y: float, *arms_interleaved: float):
+    is_pos, diff = signed_diff(x, peak_x)
 
-@np.vectorize
-def apolyderiv(x: float, peak_x: float, peak_y: float, *arms_interleaved: float):
-    diff = x - peak_x
-    return polynomialderiv(abs(diff), 2, take_alternate(arms_interleaved, diff > 0))
+    return peak_y + sum(c[is_pos] * (diff ** (n + 2)) for n, c in enumerate(iter_pairs(arms_interleaved)))
 
-# @np.vectorize(signature='()->(n)')
-# def apolyjac(x: float, peak_x: float, peak_y: float, *arms_interleaved: float):
-#     return np.array([
-#         - apolyderiv(x, peak_x, peak_y, *arms_interleaved),
-#         1.0,
-#     ] + [
-#         x ** (n // 2 + 2) if (x > peak_x == bool(n % 2)) else 0 \
-#         for n in range(len(arms_interleaved))
-#     ])
+def apolyderiv(x: ArrayLike, peak_x: float, peak_y: float, *arms_interleaved: float):
+    is_pos, diff = signed_diff(x, peak_x)
+
+    return sum((n + 2) * c[is_pos] * (diff ** (n + 1)) for n, c in enumerate(iter_pairs(arms_interleaved)))
+
+def apolyjac(x: float, peak_x: float, peak_y: float, *arms_interleaved: float):
+    is_pos, diff = signed_diff(x, peak_x)
+    n_coeffs = len(arms_interleaved) // 2
+
+    d_peak_x = np.where(is_pos, -1, 1) * apolyderiv(x, peak_x, peak_y, *arms_interleaved)
+    d_peak_y = np.ones_like(x)
+
+    zeros = np.zeros_like(x)
+    pows = tuple(diff ** (n + 2) for n in range(n_coeffs))
+
+    d_coeffs = tuple(np.where(is_pos == bool(i%2), pows[i//2], zeros) for i in range(2 * n_coeffs))
+
+    return np.stack((d_peak_x, d_peak_y) + d_coeffs, axis=1)
 
 class APolyFitEst(EstimatorBase):
     def __init__(self, poly_degree=10, **kwargs):
@@ -66,20 +74,34 @@ class APolyFitEst(EstimatorBase):
 
         return np.array([ peak_lag, max_log_likelihood ] + [0] * (self.poly_terms * 2))
 
-    def estimate_lag(self, lag_mesh: np.ndarray[float], like_mesh: np.ndarray[float]) -> dict:
-        pfit, pcov = opt.curve_fit(
-            apoly, lag_mesh, like_mesh,
-            self.apoly_init(lag_mesh, like_mesh),
-            bounds = self.apoly_bounds(lag_mesh),
-            # jac = apolyjac
-        )
-        
-        peak_lag, peak_like, low_quad_term, high_quad_term, *_ = pfit
+    def find_err(self, arm_coeffs, max_lag_rel):
+        domain = (0, max_lag_rel)
+        poly = Polynomial((0.5, 0, *arm_coeffs), domain, domain)
+        roots = valid_real_roots(poly)
+        if len(roots) == 0:
+            return max_lag_rel
+        return max(roots)
 
-        var = (-1/low_quad_term, -1/high_quad_term)
+    def estimate_lag(self, lag_mesh: np.ndarray[float], like_mesh: np.ndarray[float]) -> dict:
+        try:
+            pfit, pcov = opt.curve_fit(
+                apoly, lag_mesh, like_mesh,
+                self.apoly_init(lag_mesh, like_mesh),
+                bounds = self.apoly_bounds(lag_mesh),
+            )
+        except RuntimeError:
+            return self.default_estimate(lag_mesh)
+
+        peak_lag, peak_like, *arms_interleaved = pfit
+
+        coeffs_lo, coeffs_hi = zip(*iter_pairs(arms_interleaved))
+
+        min_lag, max_lag = self.lag_range(lag_mesh)
+        lag_conf_range = self.find_err(coeffs_lo, peak_lag - min_lag), self.find_err(coeffs_hi, max_lag - peak_lag)
 
         return {
             'dt': peak_lag,
-            'var': var,
+            'dt_err': lag_conf_range,
+            'fit_params': pfit,
             'like_fit': lambda x: apoly(x, *pfit)
         }

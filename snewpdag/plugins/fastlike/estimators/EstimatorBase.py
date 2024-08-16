@@ -11,12 +11,43 @@ from snewpdag.dag.lib import fetch_field, store_field, store_dict_field
 
 from burstlag import DetectorRelation
 
+from sys import float_info
+
+def clamp(x, lo, hi):
+    return min(hi, max(lo, x))
+
 class EstimatorBase(Node, metaclass=ABCMeta):
+    EPSILON = float_info.epsilon
+
+    ONESIDE_CONFIDENCE_RANGE = 0.341344746069
+    FULL_CONFIDENCE_RANGE = 2 * ONESIDE_CONFIDENCE_RANGE
+
+    EST_CUM_PROB = 0.5
+
+    LOW_BOUND_CUM_PROB = EST_CUM_PROB - ONESIDE_CONFIDENCE_RANGE
+    HIGH_BOUND_CUM_PROB = EST_CUM_PROB + ONESIDE_CONFIDENCE_RANGE
+    
     def __init__(self, in_lags_field, in_likelihoods_field, out_field, **kwargs):
         self.in_lags_field = in_lags_field
         self.in_likelihoods_field = in_likelihoods_field
         self.out_field = out_field
         super().__init__(**kwargs)
+
+    def default_estimate(self, lag_mesh):
+        return  {
+            'dt': 0,
+            'dt_err': self.max_errs(lag_mesh)
+        }
+    
+    def lag_range(self, lag_mesh):
+        return np.min(lag_mesh), np.max(lag_mesh)
+    
+    def max_lag(self, lag_mesh):
+        return max(map(abs, self.lag_range(lag_mesh)))
+
+    def max_errs(self, lag_mesh):
+        lo_lag, hi_lag = self.lag_range(lag_mesh)
+        return self.FULL_CONFIDENCE_RANGE * abs(lo_lag), self.FULL_CONFIDENCE_RANGE * abs(hi_lag)
 
     @abstractmethod
     def estimate_lag(self, lags: np.ndarray[float], log_likelihoods: np.ndarray[float]) -> dict:
@@ -53,9 +84,22 @@ class EstimatorBase(Node, metaclass=ABCMeta):
             likelihoods = likelihoods[sort_i]
         
         result = self.estimate_lag(lags, likelihoods)
-        if 'dt_err' in result and 'var' not in result:
-            result['var'] = self.stdev_to_var(result['dt_err'])
-        elif 'var' in result and 'dt_err' not in result:
+
+        result['dt'] = clamp(result['dt'], *self.lag_range(lags))
+
+        if 'var' in result and 'dt_err' not in result:
             result['dt_err'] = self.var_to_stdev(result['var'])
+
+        min_err = self.max_lag(lags) * self.EPSILON
+        lo_max_err, hi_max_err = self.max_errs(lags)
+
+        if isinstance(result['dt_err'], (list, tuple)):
+            lo_err, hi_err = result['dt_err']
+            result['dt_err'] = clamp(lo_err, min_err, lo_max_err), clamp(hi_err, min_err, hi_max_err)
+        else:
+            max_err = max(lo_max_err, hi_max_err)
+            result['dt_err'] = clamp(result['dt_err'], min_err, max_err)
+
+        result['var'] = self.stdev_to_var(result['dt_err'])
 
         return store_dict_field(data, self.out_field, **result)
