@@ -4,10 +4,16 @@ import os
 __all__ = ('LineWriter', 'tuple_pairs', 'q')
 
 class LineWriter:
-    def __init__(self, file):
+    def __init__(self, file, global_params = { "save_last_data": False }):
         self.file = file
         self.prev = None
+        self.global_params = global_params
     
+    def add_global_params(self, params):
+        combined = self.global_params.copy()
+        combined.update(params)
+        return combined
+
     @classmethod
     def from_path(cls, fpath):
         os.makedirs(os.path.dirname(fpath), exist_ok=True)
@@ -32,7 +38,9 @@ class LineWriter:
                 trigger_from = ",".join(trigger_from)
             source_nodes = f'"{trigger_from}"'
 
-        self.file.write(f'"{name}","{cls}",{source_nodes},"{self.flat_dict(params)}"\n')
+        all_params = self.add_global_params(params)
+
+        self.file.write(f'"{name}","{cls}",{source_nodes},"{self.flat_dict(all_params)}"\n')
         self.prev = name
     
     def comment(self, comment: str, use_hash: bool = False):
