@@ -83,7 +83,8 @@ class PairTrialPlot(Node):
                 if 'like_fit' in results:
                     f_like_fit = results['like_fit']
                     like_fit = f_like_fit(fit_lag_mesh)
-                    ax.plot(fit_lag_mesh, like_fit, color=colour)
+                    plot_mask = (like_fit < np.max(like_mesh)) & (like_fit > np.min(like_mesh))
+                    ax.plot(fit_lag_mesh[plot_mask], like_fit[plot_mask], color=colour)
 
             if has_true_dt:
                 ax.axvline(x=true_dt, color='green', label=f"True dt = ${true_dt:.{self.sig_fig}g}$")
