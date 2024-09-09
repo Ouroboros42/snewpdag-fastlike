@@ -3,14 +3,15 @@ import numpy as np
 from numpy.typing import ArrayLike
 from numpy.polynomial import Polynomial
 import scipy.optimize as opt
+from math import sqrt
 
 from .EstimatorBase import EstimatorBase
 from .poly_util import find_peak, weights
 
 class HybridPolyEst(EstimatorBase):
-    def __init__(self, poly_degree=10, use_poly_peak_deriv=False, curve_weights=None, **kwargs):
+    def __init__(self, poly_degree=10, shift_errors=False, curve_weights=None, **kwargs):
         self.poly_degree = poly_degree
-        self.use_poly_peak_deriv = use_poly_peak_deriv
+        self.shift_errors = shift_errors
         self.curve_weights = curve_weights
         super().__init__(**kwargs)
 
@@ -21,19 +22,22 @@ class HybridPolyEst(EstimatorBase):
 
         peak_time = lag_mesh[np.argmax(like_mesh)]
 
-        if self.use_poly_peak_deriv:
-            deriv_point, _ = find_peak(pfit)
-        else:
-            deriv_point = peak_time
+        deriv_point, _ = find_peak(pfit)
 
         fisher_info = -second_deriv(deriv_point)
         if fisher_info < 0:
             logging.warning("Likelihood maximum not found - positive second derivative")
 
-        var = 1 / np.abs(fisher_info)
+        stdev = sqrt(1 / abs(fisher_info))
+
+        if self.shift_errors:
+            err_shift = peak_time - deriv_point
+            uncertainty = sqrt(stdev ** 2 + err_shift ** 2)
+        else:
+            uncertainty = stdev
 
         return {
             'dt': peak_time,
-            'var': var,
+            'dt_err': uncertainty,
             'like_fit': pfit
         }

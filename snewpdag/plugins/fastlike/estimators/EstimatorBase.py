@@ -13,20 +13,15 @@ from burstlag import DetectorRelation
 
 from sys import float_info
 
+from .cum_util import EPSILON, ONESIDE_CONFIDENCE_RANGE
+
 def clamp(x, lo, hi):
     return min(hi, max(lo, x))
 
 class EstimatorBase(Node, metaclass=ABCMeta):
-    EPSILON = float_info.epsilon
-
-    ONESIDE_CONFIDENCE_RANGE = 0.341344746069
+    EPSILON = EPSILON
     FULL_CONFIDENCE_RANGE = 2 * ONESIDE_CONFIDENCE_RANGE
 
-    EST_CUM_PROB = 0.5
-
-    LOW_BOUND_CUM_PROB = EST_CUM_PROB - ONESIDE_CONFIDENCE_RANGE
-    HIGH_BOUND_CUM_PROB = EST_CUM_PROB + ONESIDE_CONFIDENCE_RANGE
-    
     def __init__(self, in_lags_field, in_likelihoods_field, out_field, **kwargs):
         self.in_lags_field = in_lags_field
         self.in_likelihoods_field = in_likelihoods_field

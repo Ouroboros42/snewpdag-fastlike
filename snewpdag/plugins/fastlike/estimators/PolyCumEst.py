@@ -11,28 +11,23 @@ from numpy.polynomial import Polynomial
 import scipy.optimize as opt
 
 from .EstimatorBase import EstimatorBase
-
-from .poly_util import valid_real_roots
+from .poly_util import weights
+from .cum_util import lag_estimate
 
 class PolyCumEst(EstimatorBase):
-    def __init__(self, poly_degree=10, **kwargs):
+    def __init__(self, poly_degree=10, integral_samples=10000, curve_weights=None, **kwargs):
         self.poly_degree = poly_degree
+        self.curve_weights = curve_weights
+        self.integral_samples = integral_samples
         super().__init__(**kwargs)
 
-    def estimate_lag(self, lag_mesh: np.ndarray[float], log_like_mesh: np.ndarray[float]) -> dict:
-        like_mesh = np.exp(log_like_mesh - np.max(log_like_mesh))
-
-        pfit = Polynomial.fit(lag_mesh, like_mesh, deg=self.poly_degree)
-        cum_like = pfit.integ(lbnd=np.min(lag_mesh))
-        cum_prob = cum_like / cum_like(np.max(lag_mesh))
-
-        median_lag = np.median(valid_real_roots(cum_prob - self.EST_CUM_PROB))
-        low_bound = np.median(valid_real_roots(cum_prob - self.LOW_BOUND_CUM_PROB))
-        high_bound = np.median(valid_real_roots(cum_prob - self.HIGH_BOUND_CUM_PROB))
-
-        dt_err = (median_lag - low_bound, high_bound - median_lag)
+    def estimate_lag(self, lag_mesh: np.ndarray[float], like_mesh: np.ndarray[float]) -> dict:
+        pfit = Polynomial.fit(lag_mesh, like_mesh, deg=self.poly_degree, w=weights(self.curve_weights, like_mesh))
+    
+        sample_lags = np.linspace(np.min(lag_mesh), np.max(lag_mesh), self.integral_samples)
+        sample_likes = pfit(sample_lags)        
 
         return {
-            'dt': median_lag,
-            'dt_err': dt_err
+            **lag_estimate(sample_lags, sample_likes),
+            'like_fit': pfit
         }
