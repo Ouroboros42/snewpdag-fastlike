@@ -1,0 +1,20 @@
+{
+    "detectors" : [ "IC", "JUNO", "SK", "LVD", "SNOP" ],
+
+    "bin_widths" : [ 0.002, 0.005, 0.01 ],
+
+    "mesh_spacings" : [ 0.001, 0.002 ],
+    
+    "likelihood_methods" : [
+        [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ]
+    ],
+
+    "estimator_methods" : [
+        [ "quadfit", "fastlike.estimators.QuadFitEst", {  } ],
+        [ "uquadfit", "fastlike.estimators.QuadFitEst", { "use_raw_peak": true } ],
+        [ "quadfitsig", "fastlike.estimators.QuadFitEst", { "fit_cost": "'sig_quad'" } ],
+        [ "uquadfitsig", "fastlike.estimators.QuadFitEst", { "use_raw_peak": true, "fit_cost": "'sig_quad'" } ],
+        [ "hybrid-p10", "fastlike.estimators.HybridPolyEst", { "poly_degree": 10 } ],
+        [ "hybrid-shifted-p10", "fastlike.estimators.HybridPolyEst", { "poly_degree": 10, "shift_errors": true } ]
+    ]
+}

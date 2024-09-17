@@ -6,3 +6,4 @@ from .PolyCumEst import PolyCumEst
 from .RawMaxEst import RawMaxEst
 from .HybridPolyEst import HybridPolyEst
 from .GaussSmoothEst import GaussSmoothEst
+from .QuadFitEst import QuadFitEst

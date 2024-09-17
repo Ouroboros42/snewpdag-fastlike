@@ -44,6 +44,12 @@ class EstimatorBase(Node, metaclass=ABCMeta):
         lo_lag, hi_lag = self.lag_range(lag_mesh)
         return self.FULL_CONFIDENCE_RANGE * abs(lo_lag), self.FULL_CONFIDENCE_RANGE * abs(hi_lag)
 
+    def max_var(self, lag_mesh):
+        return max(self.max_errs(lag_mesh))**2
+
+    def min_var(self, lag_mesh):
+        return self.EPSILON * abs(np.max(lag_mesh) - np.min(lag_mesh))
+
     @abstractmethod
     def estimate_lag(self, lags: np.ndarray[float], log_likelihoods: np.ndarray[float]) -> dict:
         pass

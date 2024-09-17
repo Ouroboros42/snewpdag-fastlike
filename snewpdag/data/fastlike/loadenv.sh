@@ -5,7 +5,19 @@
 set -a
 
 PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
-for envfile in snewpdag/data/fastlike/env/*.sh; do . $envfile; done
+
+echo "Producing ${MAX_PLOTS:=20} trial plots"
+echo "Log Level: ${LOG_LEVEL:=WARNING}"
+
+: ${SAVE_IMG_TYPE:=png}
+
+NOW=$( date '+%F_%H.%M.%S' )
+
+: ${DETECTOR_LOCATIONS:="$PROJECT_ROOT/snewpdag/data/detector_location.csv"}
+
+echo Sampling ${SN_CASE:=27M} supernova
+
+. $PROJECT_ROOT/snewpdag/data/fastlike/cases/$SN_CASE.sh
 
 set +a
 
