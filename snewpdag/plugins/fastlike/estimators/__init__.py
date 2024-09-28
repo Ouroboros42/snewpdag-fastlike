@@ -7,3 +7,5 @@ from .RawMaxEst import RawMaxEst
 from .HybridPolyEst import HybridPolyEst
 from .GaussSmoothEst import GaussSmoothEst
 from .QuadFitEst import QuadFitEst
+from .FixedPolyFitEst import FixedPolyFitEst
+from .FixedAPolyFitEst import FixedAPolyFitEst

@@ -11,6 +11,7 @@ from snewpdag.dag.lib import fetch_field, store_field, store_dict_field
 
 from burstlag import DetectorRelation
 
+from math import sqrt
 from sys import float_info
 
 from .cum_util import EPSILON, ONESIDE_CONFIDENCE_RANGE
@@ -49,6 +50,16 @@ class EstimatorBase(Node, metaclass=ABCMeta):
 
     def min_var(self, lag_mesh):
         return self.EPSILON * abs(np.max(lag_mesh) - np.min(lag_mesh))
+
+    def curve_uncertainty(self, second_deriv):
+        if isinstance(second_deriv, (list, tuple)):
+            return tuple(map(self.curve_uncertainty, second_deriv))
+        
+        fisher_info = -second_deriv
+        if fisher_info < 0:
+            logging.warning("Likelihood maximum not found - positive second derivative")
+
+        return sqrt(1 / abs(fisher_info))
 
     @abstractmethod
     def estimate_lag(self, lags: np.ndarray[float], log_likelihoods: np.ndarray[float]) -> dict:

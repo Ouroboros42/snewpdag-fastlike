@@ -1,0 +1,17 @@
+{
+    "detectors" : [ "IC", "JUNO", "SK", "LVD", "SNOP" ],
+
+    "bin_widths" : [ 0.002, 0.005, 0.01 ],
+
+    "mesh_spacings" : [ 0.001, 0.002 ],
+    
+    "likelihood_methods" : [
+        [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ]
+    ],
+
+    "estimator_methods" : [
+        [ "hybrid-p10", "fastlike.estimators.HybridPolyEst", { "poly_degree": 10 } ],
+        [ "fixed-p10", "fastlike.estimators.FixedPolyFitEst", { "poly_degree": 10 } ],
+        [ "fixed-ap10", "fastlike.estimators.FixedAPolyFitEst", { "poly_degree": 5 } ]
+    ]
+}
