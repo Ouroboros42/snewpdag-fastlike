@@ -1,3 +1,6 @@
+# Fast likelihood testing
+This is a fork of the main snewpdag project for testing the likelihood estimator for burst arrival time lag. For documentation specific to this fork, see [docs](./docs)
+
 # snewpdag
 
 SNEWS2 alert (pointing) calculations.

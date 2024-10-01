@@ -1,0 +1,15 @@
+{
+    "detectors" : [ "LVD", "SNOP" ],
+
+    "bin_widths" : [ 0.002 ],
+
+    "mesh_spacings" : [ 0.001 ],
+    
+    "likelihood_methods" : [
+        [ "fullsum", "fastlike.likelihoods.SumLikelihood", { "rel_precision": 1e-2 } ]
+    ],
+
+    "estimator_methods" : [
+        [ "p10", "fastlike.estimators.PolyFitEst", { "poly_degree": 10 } ]
+    ]
+}
