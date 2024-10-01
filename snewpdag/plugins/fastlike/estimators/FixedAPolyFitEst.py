@@ -50,12 +50,11 @@ class FixedAPolyFitEst(EstimatorBase):
         peak_like = like_mesh[peak_i]
         zeroed_lags = lag_mesh - peak_lag
         
-
         fit_params, fit_cov = opt.curve_fit(apoly, zeroed_lags, like_mesh,
             p0=self.apoly_init(peak_like), bounds=self.apoly_bounds()
         )
 
-        uncertainty = self.curve_uncertainty(tuple(fit_params[1:3]))
+        uncertainty = self.curve_uncertainty(tuple(2 * fit_params[1:3]))
 
         def like_fit(lag):
             return apoly(lag - peak_lag, *fit_params)
