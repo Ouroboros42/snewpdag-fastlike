@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-: ${MODEL:=s11.2c} #e.g., s27.0co or s11.2c
+: ${MODEL:=s11} #e.g., s27.0co or s11.2c
 : ${SPECIES:=nu_e} #e.g., nu_e, nu_x, nubar_e, nubar_x
 
 # Depends on Model and Species variables

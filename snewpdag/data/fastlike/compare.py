@@ -84,7 +84,8 @@ with LineWriter.from_path(args.config_file_out) as w:
             field=('timeseries',det),
             sig_mean=f"$YIELD_{det}", sig_t0=('truth','dets',det,'true_t'),
             sig_filetype="$SIGNAL_FILETYPE",
-            sig_filename="'$SIGNAL_FILE'"
+            sig_delimiter="$SIGNAL_FILE_DELIMITER",
+            sig_filename=f"$SIGNAL_FILE_{det}"
         )
         w.module(f"{det}-bg", "gen.Uniform",
             field=('timeseries',det),
