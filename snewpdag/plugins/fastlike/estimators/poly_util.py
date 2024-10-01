@@ -13,9 +13,12 @@ def valid_real_roots(poly: Polynomial):
 
 def find_peak(poly: Polynomial):
     roots = valid_real_roots(poly.deriv())
+    if len(roots) == 0:
+        roots = np.array(poly.domain)
     root_values = poly(roots)
     i_max = np.argmax(root_values)
     return roots[i_max], root_values[i_max]
+        
 
 WEIGHT_FORMULAE = {
     None: lambda x: np.ones_like(x),

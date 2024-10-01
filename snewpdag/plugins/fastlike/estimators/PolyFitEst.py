@@ -1,5 +1,5 @@
 """
-PolyFitLag - estimate burst time from a polynomial fit likelihood of Poisson distributed burst data
+PolyFitEst - estimate burst time from a polynomial fit likelihood of Poisson distributed burst data
 
 Optional:
     poly_degree: degree of polynomial to fit
