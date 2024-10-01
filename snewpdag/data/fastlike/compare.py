@@ -119,7 +119,8 @@ with LineWriter.from_path(args.config_file_out) as w:
                 in_series1_field=('timeseries', det1), in_series2_field=('timeseries',det2),
                 out_field=binning_field,
                 bin_width=bin_width, window="$WINDOW",
-                det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}"
+                det1_bg=f"$BG_{det1}", det2_bg=f"$BG_{det2}",
+                max_lag="$MAX_LAG"
             )
 
             meshes_field = (*binning_field, 'meshes')
