@@ -28,6 +28,8 @@ img_type = "$SAVE_IMG_TYPE"
 img_outdir = output_dir / 'imgs'
 json_outdir = output_dir / 'jsons'
 
+img_ending = f"{{1}}-{{2}}.{img_type}"
+
 def cartesian_product(a: list, b: list, asymmetric: bool = False):
     pairs = []
     for i, a_item in enumerate(a):
@@ -123,6 +125,17 @@ with LineWriter.from_path(args.config_file_out) as w:
                 max_lag="$MAX_LAG"
             )
 
+            binning_img_outdir = pair_img_path / "histograms" / f"bw-{bin_width}s"
+
+            w.module(f"plot-{binning_name_suffix}", "renderers.fastlike.PairCountsPlot",
+                in_count_1_field=(*binning_field, 'hist_1'),
+                in_count_2_field=(*binning_field, 'hist_2'),
+                label_1=q(det1), label_2=q(det2),
+                in_hist_bins_field=(*binning_field, 'hist_bins'),
+                max_plots = "$MAX_PLOTS",
+                filename=q(binning_img_outdir / f"event-counts-{img_ending}")
+            )
+
             meshes_field = (*binning_field, 'meshes')
             for mesh_spacing in mesh_spacings:
                 mesh_field = (*meshes_field, mesh_spacing)
@@ -158,7 +171,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                         est_method_name_suffix = f"{est_method_name}_{like_method_name_suffix}"
 
                         def pull_img_pattern(pullname):
-                            return q(like_method_img_outdir / "report" / f"{est_method_name}-{pullname}-{{1}}-{{2}}.{img_type}")
+                            return q(like_method_img_outdir / "report" / f"{est_method_name}-{pullname}-{img_ending}")
                         
                         stats_summary_labels = {
                             "bin_width": bin_width,
@@ -221,7 +234,7 @@ with LineWriter.from_path(args.config_file_out) as w:
                         in_true_t2_field = true_t2_field,
                         max_plots = "$MAX_PLOTS",
                         ncolours = len(estimator_methods),
-                        filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{{1}}-{{2}}.{img_type}"), 
+                        filename = q(like_method_img_outdir / "trials"  / f"lag-estimates-{img_ending}"), 
                     )
 
         for like_method_name, like_plugin_class, like_kwargs in likelihood_methods:

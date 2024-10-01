@@ -65,18 +65,20 @@ class SeriesBinning(Node):
         )
 
         def bin_hist(series, lag: float = 0.0):
-            return series.histogram(self.n_bins, hist_start_1 - lag, hist_stop_1 - lag)[0]
+            return series.histogram(self.n_bins, hist_start_1 - lag, hist_stop_1 - lag)
 
-        hist_1 = bin_hist(time_series_1)
+        hist_1, bins = bin_hist(time_series_1)
 
         @np.vectorize(signature='()->(n)')
         def get_hist_2(lag: float = 0.0):
-            return bin_hist(time_series_2, lag)
+            return bin_hist(time_series_2, lag)[0]
 
         return store_dict_field(data, self.out_field,
             max_lag = self.max_lag,
             window = self.window,
             det_rel = det_rel,
             hist_1 = hist_1,
+            hist_bins = bins, 
+            hist_2 = get_hist_2(0),
             get_hist_2 = get_hist_2
         )
