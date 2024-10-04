@@ -72,9 +72,6 @@ class CompPlot(Node):
             max_stat = max(plot_stat, max_stat)
 
         with FileFigure.for_node(self, data, figsize=(20, 18)) as fig:
-            fig.tight_layout()
-            fig.suptitle(self.title, size=self.title_size)
-
             grid = ImageGrid(fig, 111,
                 nrows_ncols = (len(self.like_methods), len(self.est_methods)),
                 share_all = True,
@@ -110,9 +107,10 @@ class CompPlot(Node):
                 "fontsize" : self.big_ax_label_size
             }
 
-            top_text(fig, "Estimator Method", 0.03, **big_ax_label_kwargs)
-            right_text(fig, "Likelihood Formula", 0.03, **big_ax_label_kwargs)
-            left_text(fig, "Bin Width / s", 0.05, **big_ax_label_kwargs)
-            bottom_text(fig, "Mesh Spacing / s", 0.03, **big_ax_label_kwargs)
+            top_text(fig, "Estimator Method\n", **big_ax_label_kwargs)
+            right_text(fig, "Likelihood Formula\n", **big_ax_label_kwargs)
+            left_text(fig, "Bin Width / s\n\n", **big_ax_label_kwargs)
+            bottom_text(fig, "\nMesh Spacing / s", **big_ax_label_kwargs)
 
+            top_text(fig, f"{self.title}\n\n", fontsize=self.title_size, transform=big_ax_label_kwargs["transform"])
         return True
