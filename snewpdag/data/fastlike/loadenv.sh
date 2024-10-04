@@ -14,7 +14,7 @@ echo "Log Level: ${LOG_LEVEL:=WARNING}"
 NOW=$( date '+%F_%H.%M.%S' )
 
 : ${DETECTOR_LOCATIONS:="$PROJECT_ROOT/snewpdag/data/detector_location.csv"}
-: ${MAX_LAG:=0.05}
+: ${MAX_LAG:=0.1}
 
 echo Sampling ${SN_CASE:=27M} supernova
 
