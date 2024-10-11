@@ -10,6 +10,12 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fill_filename, fetch_field, store_field, store_dict_field, append_tuple_field
 
 class PairPullPlot(Node):
+    """Plot pull scores or errors for a specific estimator as a histogram with a normal fit.
+
+    Sources scores from in_pull_field, which should be the output of an Accumulator.
+    Appends normal-fit results to a stats_summary_array_field in a dictionary, which is extended with stats_summary_labels for sorting.
+    """
+    
     def __init__(self,
         filename, in_pull_field, title="Pull Distribution",
         stats_summary_array_field = None, stats_summary_labels = {},

@@ -13,7 +13,11 @@ from collections import defaultdict
 
 from .util import *
 
+
+
 class CompPlot(Node):
+    """Compares final pull-scores (or other important numerical results) for different methods."""
+    
     plot_funcs = {
         None: lambda x: x,
         'abs': np.abs,
@@ -33,6 +37,16 @@ class CompPlot(Node):
         cmap = "RdYlGn_r",
         num_text_colour = "black",
     **kwargs):
+        """
+        plot_func specifies how results should be coloured (applied to values before being put in the color-map):
+            'abs' - 0 is target, magnitude of values is comparable
+            'log' - 0 is target, magnitude varies, values are positive
+            'logabs' - 0 is target, magnitude varies
+            'abslog' - 1 is target, magnitude varies
+        in_summary_field labels a field with the outputs of PairPullPlot
+        stat specifies which of the summary stats to plot
+        """
+
         self.in_summary_field = in_summary_field
         self.filename = filename
         self.stat = stat

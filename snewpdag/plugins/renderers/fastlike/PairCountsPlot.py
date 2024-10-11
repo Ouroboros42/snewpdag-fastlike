@@ -10,6 +10,8 @@ from snewpdag.dag import Node
 from snewpdag.dag.lib import fill_filename, fetch_field, store_field, store_dict_field, append_tuple_field
 
 class PairCountsPlot(Node):
+    """Plot event counts for two detectors side-by-side"""
+
     def __init__(self,
         filename,
         in_count_1_field, in_count_2_field,

@@ -3,7 +3,7 @@ To test everything is working, from the project root, run:
 ```bash
 make testfastlike TEST_CONF=simple-poly
 ```
-This should simulate 2 alerts, for only 2 detectors. The output files should appear in [output/](../output/) in a time-stamped directory.
+This should simulate 2 alerts, for only 2 detectors. The output files should appear in [output/](../output/) in a time-stamped directory (run `make cleanout` to empty the output directory if it gets full).
 
 To run more configurable trials, use [runtest.sh](../snewpdag/data/fastlike/runtest.sh).
 
