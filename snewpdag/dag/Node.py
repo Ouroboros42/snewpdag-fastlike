@@ -5,6 +5,7 @@ Implemented on observer-observable pattern.
 Plugins should subclass Node and override alert, revoke, reset, report.
 """
 import logging
+import gc
 
 from snewpdag.values import History
 
@@ -94,7 +95,10 @@ class Node:
         if result is not None:
           queue.extendleft((obs, result) for obs in next_node.observers)
           logging.debug(f'DEBUG:{next_node.name}: notify {", ".join(obs.name for obs in next_node.observers)}')
-
+        del next_data
+        del next_node
+        gc.collect()
+        
     else:
       return last_data
 

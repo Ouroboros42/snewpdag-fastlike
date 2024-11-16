@@ -1,7 +1,12 @@
+import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from snewpdag.dag.lib import fill_filename
 
+matplotlib.use('Agg')
+
 class FileFigure:
+    """Utility class to plot to a file using a context-manager"""
     def __init__(self, filename, dpi=200, **kwargs):
         self.filename = filename
         self.dpi=dpi
@@ -17,9 +22,10 @@ class FileFigure:
         return cls(filename, **kwargs)
 
     def __enter__(self):
-        self.figure = plt.figure(**self.kwargs)
+        self.figure = Figure(**self.kwargs)
         return self.figure
 
     def __exit__(self, *args):
         self.figure.savefig(self.filename, dpi=self.dpi, bbox_inches='tight')
+        self.figure.clear()
         plt.close(self.figure)
