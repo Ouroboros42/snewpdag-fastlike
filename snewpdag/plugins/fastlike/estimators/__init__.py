@@ -9,3 +9,4 @@ from .GaussSmoothEst import GaussSmoothEst
 from .QuadFitEst import QuadFitEst
 from .FixedPolyFitEst import FixedPolyFitEst
 from .FixedAPolyFitEst import FixedAPolyFitEst
+from .BoundedPolyFitEst import BoundedPolyFitEst
