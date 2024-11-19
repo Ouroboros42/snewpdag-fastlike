@@ -28,3 +28,22 @@ Other noteworthy environment variables are:
 * `$MAX_LAG`: Largest possible time difference between detectors, defining the range of the likelihood scan.
 
 Changing environment variables does not require a rebuild of the config files.
+
+# Example Trial Run:
+```shell
+# None of these need to be specified, they all have default values
+export N_TRIALS=100
+export LABEL=an-example-trial
+export SN_CASE=27M
+export MEDIUM_OVERRIDE=scint
+export MAX_LAG=0.1
+
+# These are not special variables, just used here for clarity
+EG_OUTPUT_DIR = output/example/
+DAT_ROOT = snewpdag/data/fastlike/
+
+# This command actually runs the trials
+$DAT_ROOT/runtest.sh $DAT_ROOT/configs/bpdeg.csv $EG_OUTPUT_DIR
+```
+
+This script would run 100 trials and put the outputs in a folder called `output/example/an-example-trial`.
